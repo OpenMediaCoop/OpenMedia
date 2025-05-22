@@ -1,0 +1,92 @@
+graph TD
+    subgraph "Fuentes de Noticias (Chile)"
+        EM["El Mercurio"]
+        LT["La Tercera"]
+        BB["Bio Bio Chile"]
+        Mostrador["El Mostrador"]
+        DF["Diario Financiero"]
+    end
+
+    subgraph "Capa de Recolección de Datos (MVP)"
+        Crawlers["Web Crawlers (Scrapy)"]
+        KafkaQueue["Cola de Noticias (Kafka)"]
+    end
+
+    subgraph "Capa de Procesamiento y Análisis (MVP)"
+        subgraph "Procesador NLP Básico"
+            direction LR
+            TextExtractor["Extracción de Texto y Metadatos"]
+            Summarizer["Resumidor Automático (3-5 Lineas)"]
+            Classifier["Clasificador Temático Básico"]
+            SentimentAnalyzer["Análisis de Redacción (Básico)"]
+            SentimentAnalyzer1["Crear hashtags"]
+            SentimentAnalyzer2["N processors..."]
+        end
+    end
+
+    subgraph "Capa de Almacenamiento (MVP)"
+        MongoDB["Base de Datos (PgVectorDB)"]
+        MongoDB_Processed["Noticias Procesadas"]
+        MongoDB_Indexes["Índices para Búsqueda"]
+    end
+
+    subgraph "Capa de Presentación (MVP)"
+        API["API RESTful"]
+        subgraph "Frontend Web Mínimo"
+            direction TB
+            NewsList["Lista de Noticias (Resumen, Etiquetas)"]
+            Search["Búsqueda por Palabras Clave"]
+            Filters["Filtros (Fecha, Medio, Categoría)"]
+            Dashboard["Dashboard Analítico Simple"]
+        end
+        User["Usuario Final"]
+    end
+
+    %% Conexiones
+    EM --> Crawlers
+    LT --> Crawlers
+    BB --> Crawlers
+    Mostrador --> Crawlers
+    DF --> Crawlers
+
+    Crawlers --> KafkaQueue
+
+    KafkaQueue --> TextExtractor
+    KafkaQueue --> Summarizer
+    KafkaQueue --> Classifier
+    KafkaQueue --> SentimentAnalyzer
+
+    TextExtractor --> MongoDB
+    Summarizer --> MongoDB
+    Classifier --> MongoDB
+    SentimentAnalyzer --> MongoDB
+
+    MongoDB --> MongoDB_Processed
+    MongoDB --> MongoDB_Indexes
+
+    MongoDB --> API
+
+    API --> NewsList
+    API --> Search
+    API --> Filters
+    API --> Dashboard
+
+    NewsList --> User
+    Search --> User
+    Filters --> User
+    Dashboard --> User
+
+    %% Estilos (opcional, para mejorar la visualización si la herramienta lo soporta)
+    classDef cloud fill:#f9f,stroke:#333,stroke-width:2px;
+    class EM,LT,BB,Mostrador,DF cloud;
+
+    classDef queue fill:#ccf,stroke:#333,stroke-width:2px;
+    class KafkaQueue queue;
+
+    %% Modified database styling for potentially stricter parsers
+    classDef dbStyle fill:#lightgrey,stroke:#333,stroke-width:2px;
+    class MongoDB dbStyle;
+    class MongoDB_Processed dbStyle;
+    class MongoDB_Indexes dbStyle;
+
+    classDef actor fill:#ff9,stroke:#333,stroke-width:2px;

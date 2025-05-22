@@ -1,0 +1,25 @@
+graph TD
+    KafkaQueue["Cola de Noticias (Kafka)"] --> InitialProcessor["Procesador Inicial (Registro)"]
+    InitialProcessor --> NewsDB[("Base de Datos (PgVectorDB)")]
+    InitialProcessor --> KafkaEnrichQueue["Cola de Enriquecimiento (Kafka)"]
+    
+    subgraph "Pipeline de Enriquecimiento"
+        KafkaEnrichQueue --> |ID + Metadata| VectorizerProcessor["Procesador de Vectorización"]
+        KafkaEnrichQueue --> |ID + Metadata| SummarizerProcessor["Procesador de Resúmenes"]
+        KafkaEnrichQueue --> |ID + Metadata| CategorizeProcessor["Procesador de Categorización"]
+        KafkaEnrichQueue --> |ID + Metadata| HashtagProcessor["Procesador de Hashtags"]
+        KafkaEnrichQueue --> |ID + Metadata| JQProcessor["Procesador de Calidad Periodística"]
+        
+        VectorizerProcessor --> |Actualización| NewsDB
+        SummarizerProcessor --> |Actualización| NewsDB
+        CategorizeProcessor --> |Actualización| NewsDB
+        HashtagProcessor --> |Actualización| NewsDB
+        JQProcessor --> |Actualización| NewsDB
+    end
+    
+    subgraph "Capa de Monitoreo"
+        ProcessMonitor["Monitor de Procesamiento"]
+        CorrelationTracker["Rastreador de IDs de Correlación"]
+        ProcessMonitor --> NewsDB
+        CorrelationTracker --> NewsDB
+    end
