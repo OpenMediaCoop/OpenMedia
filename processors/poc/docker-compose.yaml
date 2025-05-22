@@ -46,6 +46,9 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       PGVECTOR_DSN: postgresql://postgres:postgres@pgvector:5432/scrapper
       EMBEDDING_MODEL: sentence-transformers/all-MiniLM-L6-v2
+    volumes:
+      - ./src:/app/src
+    working_dir: /app/src
     depends_on:
       - kafka
       - postgres
