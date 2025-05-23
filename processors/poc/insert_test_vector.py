@@ -2,11 +2,11 @@ from kafka import KafkaProducer
 import json
 import uuid
 
-producer = KafkaProducer(
-    bootstrap_servers="localhost:9092",
-    value_serializer=lambda v: json.dumps(v).encode("utf-8")
-)
-print("🟡 KafkaProducer creado en localhost:9092")
+# producer = KafkaProducer(
+#     bootstrap_servers="localhost:9092",
+#     value_serializer=lambda v: json.dumps(v).encode("utf-8")
+# )
+# print("🟡 KafkaProducer creado en localhost:9092")
 
 test_html = """
 <html>
@@ -31,7 +31,8 @@ payload = {
 }
 
 print("🟢 Enviando mensaje a topic 'vector.topic'...")
-producer.send("vector.topic", value=payload)
-producer.flush()
+print("payload:", payload)
+# producer.send("vector.topic", value=payload)
+# producer.flush()
 
 print(f"✅ Mensaje enviado a Kafka con ID: {payload['id']}")
