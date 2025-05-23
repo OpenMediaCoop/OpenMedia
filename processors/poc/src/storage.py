@@ -23,6 +23,10 @@ class PgVectorStorage:
             async with self.engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
 
+    async def close(self):
+        if self.pool:
+            await self.pool.close()
+
     async def insert_news(self, news: NewsInput) -> int:
         async with self.async_session() as session:
             # Create News instance from NewsInput

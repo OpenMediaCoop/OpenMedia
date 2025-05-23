@@ -20,7 +20,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar el código fuente dentro del contenedor
-COPY src/ src/
+COPY src/ app/src/
 
 # Establecer el entrypoint correcto con el módulo src.main
-CMD ["python", "-m", "src.main"]
+ENTRYPOINT ["python", "-u", "main.py"]

@@ -11,6 +11,10 @@ class PgVectorStorage:
         if not self.pool:
             self.pool = await asyncpg.create_pool(PGVECTOR_DSN)
 
+    async def close(self):
+        if self.pool:
+            await self.pool.close()
+
     async def insert_news(self, news: NewsInput) -> int:
         async with self.pool.acquire() as conn:
             result = await conn.fetchrow("""

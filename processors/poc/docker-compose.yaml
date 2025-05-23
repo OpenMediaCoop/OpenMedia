@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   kafka:
     image: bitnami/kafka:3.5
@@ -12,8 +10,12 @@ services:
       KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_CFG_LISTENERS: PLAINTEXT://0.0.0.0:9092
       ALLOW_PLAINTEXT_LISTENER: "yes"
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: PLAINTEXT
     depends_on:
       - zookeeper
+    networks:
+      - scrapper-net
 
   zookeeper:
     image: bitnami/zookeeper:3.8
@@ -22,6 +24,8 @@ services:
       - "2181:2181"
     environment:
       ALLOW_ANONYMOUS_LOGIN: "yes"
+    networks:
+      - scrapper-net
 
   postgres:
     image: ankane/pgvector
@@ -32,10 +36,12 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./init.dev.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - scrapper-net
 
   consumer:
     build:
@@ -43,7 +49,7 @@ services:
       dockerfile: Dockerfile
     container_name: scrapper-consumer
     environment:
-      KAFKA_TOPIC: scrapper.html.raw
+      KAFKA_TOPIC: vector.topic
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       PGVECTOR_DSN: postgresql://postgres:postgres@pgvector:5432/scrapper
       EMBEDDING_MODEL: sentence-transformers/all-MiniLM-L6-v2
@@ -54,6 +60,11 @@ services:
       - kafka
       - postgres
     restart: always
+    networks:
+      - scrapper-net
 
 volumes:
   pgdata:
+
+networks:
+  scrapper-net:

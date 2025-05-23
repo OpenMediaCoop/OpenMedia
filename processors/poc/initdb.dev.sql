@@ -20,3 +20,14 @@ CREATE TABLE IF NOT EXISTS news (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE scraping_metadata (
+    id SERIAL PRIMARY KEY,
+    news_id INT REFERENCES news(id),
+    source TEXT,
+    url TEXT,
+    original_published_at TIMESTAMPTZ,
+    http_status INT,
+    headers JSONB,
+    raw_html TEXT
+);
