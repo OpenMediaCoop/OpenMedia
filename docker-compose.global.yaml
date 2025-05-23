@@ -1,0 +1,38 @@
+version: '3.9'
+
+services:
+  kafka:
+    image: bitnami/kafka:latest
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_LISTENERS: PLAINTEXT://:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    networks:
+      - scrapper-net
+
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    environment:
+      ALLOW_ANONYMOUS_LOGIN: 'yes'
+    networks:
+      - scrapper-net
+
+  pgvector:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: scrapper
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - scrapper-net
+
+volumes:
+  pgdata:
+
+networks:
+  processor-net:
+    name: processor-net
+    driver: bridge

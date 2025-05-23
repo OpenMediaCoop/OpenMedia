@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   kafka:
     image: bitnami/kafka:3.5
@@ -12,8 +10,12 @@ services:
       KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_CFG_LISTENERS: PLAINTEXT://0.0.0.0:9092
       ALLOW_PLAINTEXT_LISTENER: "yes"
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: PLAINTEXT
     depends_on:
       - zookeeper
+    networks:
+      - scrapper-net
 
   zookeeper:
     image: bitnami/zookeeper:3.8
@@ -22,6 +24,8 @@ services:
       - "2181:2181"
     environment:
       ALLOW_ANONYMOUS_LOGIN: "yes"
+    networks:
+      - scrapper-net
 
   postgres:
     image: ankane/pgvector
@@ -36,6 +40,8 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./init.dev.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - scrapper-net
 
   consumer:
     build:
@@ -50,11 +56,15 @@ services:
     volumes:
       - ./src:/app/src
     working_dir: /app/src
-    command: ["python", "-m", "main"]
     depends_on:
       - kafka
       - postgres
     restart: always
+    networks:
+      - scrapper-net
 
 volumes:
   pgdata:
+
+networks:
+  scrapper-net:
