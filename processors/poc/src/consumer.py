@@ -1,7 +1,7 @@
 from aiokafka import AIOKafkaConsumer
 from config import KAFKA_BOOTSTRAP_SERVERS, KAFKA_TOPIC
 from processor import parse_html
-from storage import MongoStorage
+from storage import PgVectorStorage
 import asyncio
 
 async def consume_and_process():
@@ -11,13 +11,14 @@ async def consume_and_process():
         group_id="html-processors"
     )
     await consumer.start()
-    storage = MongoStorage()
+    storage = PgVectorStorage()
+    await storage.connect()
 
     try:
         async for msg in consumer:
             raw_html = msg.value.decode("utf-8")
             doc = parse_html(raw_html)
-            await storage.insert_document(doc)
-            print(f"✔ Guardado: {doc.metadata.title}")
+            inserted_id = await storage.insert_news(doc)
+            print(f"✔ Guardado en PostgreSQL con ID: {inserted_id}")
     finally:
         await consumer.stop()

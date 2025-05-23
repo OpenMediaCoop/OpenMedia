@@ -32,7 +32,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./init.dev.sql:/docker-entrypoint-initdb.d/init.sql
@@ -43,13 +43,14 @@ services:
       dockerfile: Dockerfile
     container_name: scrapper-consumer
     environment:
-      KAFKA_TOPIC: scrapper.html.raw
+      KAFKA_TOPIC: vector.topic
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       PGVECTOR_DSN: postgresql://postgres:postgres@pgvector:5432/scrapper
       EMBEDDING_MODEL: sentence-transformers/all-MiniLM-L6-v2
     volumes:
       - ./src:/app/src
     working_dir: /app/src
+    command: ["python", "-m", "main"]
     depends_on:
       - kafka
       - postgres

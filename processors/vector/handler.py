@@ -1,5 +1,3 @@
-
-
 import asyncio
 import logging
 from .processor import VectorProcessor
