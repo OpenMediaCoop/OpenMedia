@@ -5,6 +5,7 @@ from sqlalchemy import Column, Integer, String, Float, DateTime, JSON, ForeignKe
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from pgvector.sqlalchemy import Vector
+from sqlalchemy.dialects.postgresql import ARRAY
 
 Base = declarative_base()
 
@@ -20,11 +21,11 @@ class News(Base):
     summary_embedding = Column(Vector(1536))  # Vector dimension should match your embedding model
     topic_classification = Column(JSON)  # Dict[str, str]
     writing_analysis = Column(JSON)  # Dict[str, float]
-    published_at = Column(DateTime)
+    published_at = Column(DateTime(timezone=True))
     author_id = Column(Integer)
     facts = Column(JSON)
     entities = Column(JSON)
-    keywords = Column(JSON)  # List[str]
+    keywords = Column(ARRAY(String))  # List[str]
     ambiguity_score = Column(Float)
     context_score = Column(Float)
     relevance_score = Column(Float)

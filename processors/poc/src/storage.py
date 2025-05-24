@@ -42,7 +42,7 @@ class PgVectorStorage:
                 author_id=news.author_id,
                 facts=news.facts,
                 entities=news.entities,
-                keywords=news.keywords,
+                keywords=news.keywords or [],
                 ambiguity_score=news.ambiguity_score,
                 context_score=news.context_score,
                 relevance_score=news.relevance_score

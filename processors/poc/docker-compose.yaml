@@ -51,7 +51,7 @@ services:
     environment:
       KAFKA_TOPIC: vector.topic
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      PGVECTOR_DSN: postgresql://postgres:postgres@pgvector:5432/scrapper
+      PGVECTOR_DSN: postgresql+asyncpg://postgres:postgres@pgvector:5432/scrapper
       EMBEDDING_MODEL: sentence-transformers/all-MiniLM-L6-v2
     volumes:
       - ./src:/app/src

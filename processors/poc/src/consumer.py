@@ -24,12 +24,15 @@ async def consume_and_process():
 
     try:
         async for msg in consumer:
-            print("🟢 Mensaje recibido de Kafka")
-            raw_html = msg.value.decode("utf-8")
-            print("Contenido:", raw_html[:200])
-            doc = parse_html(raw_html)
-            inserted_id = await storage.insert_news(doc)
-            print(f"✔ Guardado en PostgreSQL con ID: {inserted_id}")
+            try:
+                print("🟢 Mensaje recibido de Kafka")
+                raw_html = msg.value.decode("utf-8")
+                print("Contenido:", raw_html[:200])
+                doc = parse_html(raw_html)
+                inserted_id = await storage.insert_news(doc)
+                print(f"✔ Guardado en PostgreSQL con ID: {inserted_id}")
+            except Exception as inner_e:
+                print(f"⚠️ Error procesando mensaje: {inner_e}")
     except Exception as e:
         print(f"❌ ERROR en el loop de consumo: {e}")
     finally:
