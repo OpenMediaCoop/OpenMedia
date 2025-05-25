@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from .processor import VectorProcessor
+from .embeddings import generate_embedding
 
 logger = logging.getLogger(__name__)
 
