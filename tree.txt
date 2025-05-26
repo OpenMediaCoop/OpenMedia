@@ -1,0 +1,71 @@
+.
+├── LICENSE
+├── README.md
+├── app
+│   ├── bff
+│   └── web
+├── crawlers
+├── database
+│   ├── OpenMedia_v0.1.sql
+│   └── OpenMedia_v0.2.sql
+├── docker-compose.global.yaml
+├── processors
+│   ├── Dockerfile
+│   ├── README.md
+│   ├── __init__.py
+│   ├── base
+│   │   ├── __init__.py
+│   │   ├── processor_interface.py
+│   │   └── utils.py
+│   ├── common
+│   │   ├── __init__.py
+│   │   ├── config.py
+│   │   ├── kafka
+│   │   │   ├── __init__.py
+│   │   │   ├── conssumer.py
+│   │   │   └── publisher.py
+│   │   ├── models.py
+│   │   └── storage.py
+│   ├── docker-compose.yaml
+│   ├── hashtag
+│   │   └── __init__.py
+│   ├── poc
+│   │   ├── Dockerfile
+│   │   ├── __init__.py
+│   │   ├── consumer_test_vector.py
+│   │   ├── docker-compose.yaml
+│   │   ├── initdb.dev.sql
+│   │   ├── insert_test_vector.py
+│   │   ├── requirements.txt
+│   │   └── src
+│   │       ├── __init__.py
+│   │       ├── config.py
+│   │       ├── consumer.py
+│   │       ├── create_tables.py
+│   │       ├── embeddings.py
+│   │       ├── main.py
+│   │       ├── models.py
+│   │       ├── processor.py
+│   │       ├── storage.py
+│   │       └── test_storage.py
+│   ├── quality
+│   │   └── __init__.py
+│   ├── register
+│   │   ├── __init__.py
+│   │   ├── consumer.py
+│   │   ├── handler.py
+│   │   ├── main.py
+│   │   └── processor.py
+│   ├── requirements.txt
+│   ├── summary
+│   │   └── __init__.py
+│   └── vector
+│       ├── __init__.py
+│       ├── consumer.py
+│       ├── embeddings.py
+│       ├── handler.py
+│       ├── main.py
+│       └── processor.py
+└── tree.txt
+
+17 directories, 52 files

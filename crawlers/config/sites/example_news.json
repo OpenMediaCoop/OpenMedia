@@ -1,0 +1,53 @@
+{
+  "site_id": "example-news",
+  "name": "Example News Site",
+  "domain": "example-news.com",
+  "type": "news",
+  "enabled": true,
+  "priority": 5,
+  "crawl_config": {
+    "allowed_domains": ["example-news.com", "www.example-news.com"],
+    "start_urls": [
+      "https://example-news.com/",
+      "https://example-news.com/latest",
+      "https://example-news.com/politics",
+      "https://example-news.com/sports"
+    ],
+    "follow_patterns": [
+      "https://example-news.com/article/*",
+      "https://example-news.com/news/*",
+      "https://example-news.com/*/\\d{4}/\\d{2}/\\d{2}/*"
+    ],
+    "exclude_patterns": [
+      "*/comments/*",
+      "*/login",
+      "*/register",
+      "*/subscribe",
+      "*/newsletter"
+    ]
+  },
+  "content_selectors": {
+    "title": "h1.article-title, .headline h1, .post-title",
+    "content": ".article-content, .post-content, .entry-content",
+    "author": ".author-name, .byline, .article-author",
+    "date": ".publish-date, .article-date, time[datetime]",
+    "summary": ".article-summary, .excerpt, .lead"
+  },
+  "rate_limiting": {
+    "delay_min": 1.0,
+    "delay_max": 3.0,
+    "concurrent_requests": 2,
+    "respect_robots_txt": true
+  },
+  "quality_filters": {
+    "min_content_length": 200,
+    "min_title_length": 10,
+    "language": "en",
+    "exclude_keywords": ["advertisement", "sponsored", "promo"]
+  },
+  "scheduling": {
+    "crawl_frequency": "hourly",
+    "priority_boost": 1.2,
+    "max_depth": 3
+  }
+} 

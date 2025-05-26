@@ -1,0 +1,249 @@
+# Docker Compose file for OpenMedia Crawlers
+
+services:
+  # Redis for URL frontier and caching
+  redis:
+    image: redis:7-alpine
+    container_name: crawler-redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - scrapper-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Crawler Registry Service
+  crawler-registry:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crawler-registry
+    ports:
+      - "8080:8080"
+    environment:
+      SERVICE_PORT: 8080
+      REDIS_HOST: redis
+      REDIS_DB: 0
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      DEBUG: "false"
+    volumes:
+      - ./config:/app/config:ro
+    command: ["python", "-m", "services.registry.main"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - scrapper-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Site Manager Service
+  site-manager:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: site-manager
+    ports:
+      - "8081:8081"
+    environment:
+      SERVICE_PORT: 8081
+      REDIS_HOST: redis
+      REDIS_DB: 1
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      DEBUG: "false"
+    volumes:
+      - ./config:/app/config:ro
+    command: ["python", "-m", "services.site_manager.main"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - scrapper-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # URL Scheduler Service
+  url-scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: url-scheduler
+    ports:
+      - "8082:8082"
+    environment:
+      SERVICE_PORT: 8082
+      REDIS_HOST: redis
+      REDIS_DB: 2
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      DEBUG: "false"
+    volumes:
+      - ./config:/app/config:ro
+    command: ["python", "-m", "services.scheduler.main"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - scrapper-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Monitoring Service
+  monitoring:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crawler-monitoring
+    ports:
+      - "8083:8083"
+    environment:
+      SERVICE_PORT: 8083
+      REDIS_HOST: redis
+      REDIS_DB: 3
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      DEBUG: "false"
+    volumes:
+      - ./config:/app/config:ro
+    command: ["python", "-m", "services.monitoring.main"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - scrapper-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # News Crawler Instance 1
+  news-crawler-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: news-crawler-1
+    environment:
+      CRAWLER_TYPE: news
+      CRAWLER_ID: news-crawler-1
+      REGISTRY_URL: http://crawler-registry:8080
+      SITE_MANAGER_URL: http://site-manager:8081
+      SCHEDULER_URL: http://url-scheduler:8082
+      REDIS_HOST: redis
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      POSTGRES_HOST: pgvector
+      POSTGRES_DB: scrapper
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      DEBUG: "false"
+    volumes:
+      - ./config:/app/config:ro
+    command: ["python", "main.py"]
+    depends_on:
+      crawler-registry:
+        condition: service_healthy
+      site-manager:
+        condition: service_healthy
+      url-scheduler:
+        condition: service_healthy
+    networks:
+      - scrapper-net
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+
+  # News Crawler Instance 2
+  news-crawler-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: news-crawler-2
+    environment:
+      CRAWLER_TYPE: news
+      CRAWLER_ID: news-crawler-2
+      REGISTRY_URL: http://crawler-registry:8080
+      SITE_MANAGER_URL: http://site-manager:8081
+      SCHEDULER_URL: http://url-scheduler:8082
+      REDIS_HOST: redis
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      POSTGRES_HOST: pgvector
+      POSTGRES_DB: scrapper
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      DEBUG: "false"
+    volumes:
+      - ./config:/app/config:ro
+    command: ["python", "main.py"]
+    depends_on:
+      crawler-registry:
+        condition: service_healthy
+      site-manager:
+        condition: service_healthy
+      url-scheduler:
+        condition: service_healthy
+    networks:
+      - scrapper-net
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+
+  # Generic Crawler Instance
+  generic-crawler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: generic-crawler
+    environment:
+      CRAWLER_TYPE: generic
+      CRAWLER_ID: generic-crawler-1
+      REGISTRY_URL: http://crawler-registry:8080
+      SITE_MANAGER_URL: http://site-manager:8081
+      SCHEDULER_URL: http://url-scheduler:8082
+      REDIS_HOST: redis
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      POSTGRES_HOST: pgvector
+      POSTGRES_DB: scrapper
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      DEBUG: "false"
+    volumes:
+      - ./config:/app/config:ro
+    command: ["python", "main.py"]
+    depends_on:
+      crawler-registry:
+        condition: service_healthy
+      site-manager:
+        condition: service_healthy
+      url-scheduler:
+        condition: service_healthy
+    networks:
+      - scrapper-net
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+
+volumes:
+  redis_data:
+
+networks:
+  scrapper-net:
+    external: true 

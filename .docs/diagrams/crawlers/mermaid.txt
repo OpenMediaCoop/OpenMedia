@@ -1,0 +1,40 @@
+graph TD
+    subgraph "Global Crawler Architecture"
+        Registry[("Service Registry (Consul/Zookeeper)")]
+        CrawlerManager[Crawler Manager Service]
+        
+        subgraph "Crawler Fleet"
+            Crawler1[Scrapy Crawler Node]
+            Crawler2[Scrapy Crawler Node]
+            CrawlerN[Scrapy Crawler Node]
+        end
+
+        subgraph "Data Layer"
+            Frontier[(URL Frontier: Redis)]
+            Kafka[("Message Bus: Kafka")]
+            Storage[(Document Storage: S3/HDFS)]
+            MetadataDB[(Metadata: PostgreSQL)]
+        end
+
+        subgraph "Monitoring"
+            Prometheus[Prometheus]
+            Grafana[Grafana]
+        end
+
+        Registry -->|Service Discovery| CrawlerManager
+        CrawlerManager -->|Coordination| Crawler1
+        CrawlerManager -->|Coordination| Crawler2
+        CrawlerManager -->|Coordination| CrawlerN
+        Crawler1 -->|URL Fetch| Frontier
+        Crawler2 -->|URL Fetch| Frontier
+        CrawlerN -->|URL Fetch| Frontier
+        Crawler1 -->|Publish Data| Kafka
+        Crawler2 -->|Publish Data| Kafka
+        CrawlerN -->|Publish Data| Kafka
+        Kafka -->|Persist| Storage
+        Kafka -->|Metadata| MetadataDB
+        Prometheus -->|Metrics| Crawler1
+        Prometheus -->|Metrics| Crawler2
+        Prometheus -->|Metrics| CrawlerN
+        Grafana -->|Visualization| Prometheus
+    end

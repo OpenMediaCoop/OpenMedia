@@ -33,6 +33,6 @@ volumes:
   pgdata:
 
 networks:
-  processor-net:
-    name: processor-net
+  scrapper-net:
+    name: scrapper-net
     driver: bridge

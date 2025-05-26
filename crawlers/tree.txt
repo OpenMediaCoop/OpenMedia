@@ -1,0 +1,66 @@
+.
+├── Dockerfile
+├── README.md
+├── base
+│   ├── __init__.py
+│   ├── content_extractor.py
+│   ├── interfaces.py
+│   ├── models.py
+│   └── utils.py
+├── config
+│   └── sites
+│       ├── chile_news.json
+│       ├── example_news.json
+│       └── international_news.json
+├── crawlers
+│   ├── __init__.py
+│   ├── base_crawler.py
+│   ├── generic_crawler
+│   │   ├── __init__.py
+│   │   └── main.py
+│   ├── generic_crawler.py
+│   ├── news_crawler
+│   │   ├── __init__.py
+│   │   └── main.py
+│   └── news_crawler.py
+├── data
+│   └── redis
+├── docker-compose.yaml
+├── env.example
+├── generic_crawler
+│   ├── __init__.py
+│   └── main.py
+├── logs
+├── news_crawler
+│   ├── __init__.py
+│   └── main.py
+├── requirements.txt
+├── scripts
+│   ├── dev.sh
+│   ├── monitor.sh
+│   ├── register-sites.sh
+│   ├── setup.sh
+│   ├── start-crawling.sh
+│   └── test.sh
+├── services
+│   ├── __init__.py
+│   ├── monitoring
+│   │   ├── __init__.py
+│   │   ├── main.py
+│   │   └── models.py
+│   ├── registry
+│   │   ├── __init__.py
+│   │   ├── client.py
+│   │   ├── main.py
+│   │   └── models.py
+│   ├── scheduler
+│   │   ├── __init__.py
+│   │   ├── main.py
+│   │   └── models.py
+│   └── site_manager
+│       ├── __init__.py
+│       ├── main.py
+│       └── models.py
+└── tree.txt
+
+18 directories, 46 files

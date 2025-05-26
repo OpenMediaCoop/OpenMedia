@@ -1,0 +1,122 @@
+{
+  "sites": [
+    {
+      "domain": "emol.com",
+      "name": "El Mercurio Online",
+      "base_urls": [
+        "https://www.emol.com/",
+        "https://www.emol.com/noticias/"
+      ],
+      "allowed_domains": [
+        "emol.com",
+        "www.emol.com"
+      ],
+      "selectors": {
+        "title": "h1.titular::text",
+        "content": "div.cuerpo-noticia p::text",
+        "author": "span.autor::text",
+        "date": "time::attr(datetime)",
+        "category": "nav.breadcrumb a:last-child::text"
+      },
+      "crawl_delay": 2.0,
+      "concurrent_requests": 2,
+      "rate_limit": 30,
+      "priority": 1,
+      "enabled": true,
+      "respect_robots_txt": true,
+      "user_agent": "OpenMedia-Crawler/1.0",
+      "custom_headers": {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "es-CL,es;q=0.8,en;q=0.6"
+      }
+    },
+    {
+      "domain": "latercera.com",
+      "name": "La Tercera",
+      "base_urls": [
+        "https://www.latercera.com/"
+      ],
+      "allowed_domains": [
+        "latercera.com",
+        "www.latercera.com"
+      ],
+      "selectors": {
+        "title": "h1.headline::text",
+        "content": "div.story-content p::text",
+        "author": "span.byline-author::text",
+        "date": "time.published::attr(datetime)",
+        "category": "nav.breadcrumb span:last-child::text"
+      },
+      "crawl_delay": 1.5,
+      "concurrent_requests": 3,
+      "rate_limit": 40,
+      "priority": 1,
+      "enabled": true,
+      "respect_robots_txt": true,
+      "user_agent": "OpenMedia-Crawler/1.0",
+      "custom_headers": {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "es-CL,es;q=0.8,en;q=0.6"
+      }
+    },
+    {
+      "domain": "biobiochile.cl",
+      "name": "BioBio Chile",
+      "base_urls": [
+        "https://www.biobiochile.cl/",
+        "https://www.biobiochile.cl/noticias/"
+      ],
+      "allowed_domains": [
+        "biobiochile.cl",
+        "www.biobiochile.cl"
+      ],
+      "selectors": {
+        "title": "h1.title::text",
+        "content": "div.content-text p::text",
+        "author": "span.author::text",
+        "date": "time::attr(datetime)",
+        "category": "nav.breadcrumb a:last-child::text"
+      },
+      "crawl_delay": 1.0,
+      "concurrent_requests": 2,
+      "rate_limit": 50,
+      "priority": 2,
+      "enabled": true,
+      "respect_robots_txt": true,
+      "user_agent": "OpenMedia-Crawler/1.0",
+      "custom_headers": {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "es-CL,es;q=0.8,en;q=0.6"
+      }
+    },
+    {
+      "domain": "cooperativa.cl",
+      "name": "Radio Cooperativa",
+      "base_urls": [
+        "https://cooperativa.cl/",
+        "https://cooperativa.cl/noticias/"
+      ],
+      "allowed_domains": [
+        "cooperativa.cl"
+      ],
+      "selectors": {
+        "title": "h1.title-news::text",
+        "content": "div.news-content p::text",
+        "author": "span.author-name::text",
+        "date": "time.date::attr(datetime)",
+        "category": "nav.breadcrumb span:last-child::text"
+      },
+      "crawl_delay": 1.5,
+      "concurrent_requests": 2,
+      "rate_limit": 35,
+      "priority": 2,
+      "enabled": true,
+      "respect_robots_txt": true,
+      "user_agent": "OpenMedia-Crawler/1.0",
+      "custom_headers": {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "es-CL,es;q=0.8,en;q=0.6"
+      }
+    }
+  ]
+} 

@@ -1,0 +1,185 @@
+{
+  "sites": [
+    {
+      "domain": "reuters.com",
+      "name": "Reuters",
+      "base_urls": [
+        "https://www.reuters.com/",
+        "https://www.reuters.com/world/",
+        "https://www.reuters.com/business/"
+      ],
+      "allowed_domains": [
+        "reuters.com",
+        "www.reuters.com"
+      ],
+      "selectors": {
+        "title": "h1[data-testid='Heading']::text",
+        "content": "div[data-testid='ArticleBody'] p::text",
+        "author": "span[data-testid='AuthorName']::text",
+        "date": "time::attr(datetime)",
+        "category": "nav[data-testid='Breadcrumb'] a:last-child::text"
+      },
+      "crawl_delay": 2.0,
+      "concurrent_requests": 2,
+      "rate_limit": 30,
+      "priority": 1,
+      "enabled": true,
+      "respect_robots_txt": true,
+      "user_agent": "OpenMedia-Crawler/1.0",
+      "custom_headers": {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9"
+      }
+    },
+    {
+      "domain": "bbc.com",
+      "name": "BBC News",
+      "base_urls": [
+        "https://www.bbc.com/news",
+        "https://www.bbc.com/news/world"
+      ],
+      "allowed_domains": [
+        "bbc.com",
+        "www.bbc.com"
+      ],
+      "selectors": {
+        "title": "h1[data-testid='headline']::text",
+        "content": "div[data-component='text-block'] p::text",
+        "author": "div[data-component='byline-block'] span::text",
+        "date": "time::attr(datetime)",
+        "category": "nav[aria-label='Breadcrumb'] a:last-child::text"
+      },
+      "crawl_delay": 1.5,
+      "concurrent_requests": 3,
+      "rate_limit": 40,
+      "priority": 1,
+      "enabled": true,
+      "respect_robots_txt": true,
+      "user_agent": "OpenMedia-Crawler/1.0",
+      "custom_headers": {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9"
+      }
+    },
+    {
+      "domain": "elpais.com",
+      "name": "El País",
+      "base_urls": [
+        "https://elpais.com/",
+        "https://elpais.com/internacional/"
+      ],
+      "allowed_domains": [
+        "elpais.com"
+      ],
+      "selectors": {
+        "title": "h1.c_h_a::text",
+        "content": "div.c_d p::text",
+        "author": "span.c_a_a::text",
+        "date": "time::attr(datetime)",
+        "category": "nav.c_b a:last-child::text"
+      },
+      "crawl_delay": 1.5,
+      "concurrent_requests": 2,
+      "rate_limit": 35,
+      "priority": 1,
+      "enabled": true,
+      "respect_robots_txt": true,
+      "user_agent": "OpenMedia-Crawler/1.0",
+      "custom_headers": {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "es-ES,es;q=0.9"
+      }
+    },
+    {
+      "domain": "lemonde.fr",
+      "name": "Le Monde",
+      "base_urls": [
+        "https://www.lemonde.fr/",
+        "https://www.lemonde.fr/international/"
+      ],
+      "allowed_domains": [
+        "lemonde.fr",
+        "www.lemonde.fr"
+      ],
+      "selectors": {
+        "title": "h1.article__title::text",
+        "content": "div.article__content p::text",
+        "author": "span.meta__author::text",
+        "date": "time::attr(datetime)",
+        "category": "nav.breadcrumb a:last-child::text"
+      },
+      "crawl_delay": 2.0,
+      "concurrent_requests": 2,
+      "rate_limit": 25,
+      "priority": 2,
+      "enabled": true,
+      "respect_robots_txt": true,
+      "user_agent": "OpenMedia-Crawler/1.0",
+      "custom_headers": {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "fr-FR,fr;q=0.9"
+      }
+    },
+    {
+      "domain": "cnn.com",
+      "name": "CNN",
+      "base_urls": [
+        "https://www.cnn.com/",
+        "https://www.cnn.com/world"
+      ],
+      "allowed_domains": [
+        "cnn.com",
+        "www.cnn.com"
+      ],
+      "selectors": {
+        "title": "h1.headline__text::text",
+        "content": "div.l-container p.paragraph::text",
+        "author": "span.byline__name::text",
+        "date": "div.timestamp::text",
+        "category": "nav.breadcrumb a:last-child::text"
+      },
+      "crawl_delay": 2.0,
+      "concurrent_requests": 2,
+      "rate_limit": 30,
+      "priority": 1,
+      "enabled": true,
+      "respect_robots_txt": true,
+      "user_agent": "OpenMedia-Crawler/1.0",
+      "custom_headers": {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9"
+      }
+    },
+    {
+      "domain": "clarin.com",
+      "name": "Clarín",
+      "base_urls": [
+        "https://www.clarin.com/",
+        "https://www.clarin.com/politica/",
+        "https://www.clarin.com/mundo/"
+      ],
+      "allowed_domains": [
+        "clarin.com",
+        "www.clarin.com"
+      ],
+      "selectors": {
+        "title": "h1.title::text",
+        "content": "div.body-nota p::text",
+        "author": "span.author-name::text",
+        "date": "time::attr(datetime)",
+        "category": "nav.breadcrumb a:last-child::text"
+      },
+      "crawl_delay": 1.5,
+      "concurrent_requests": 2,
+      "rate_limit": 35,
+      "priority": 2,
+      "enabled": true,
+      "respect_robots_txt": true,
+      "user_agent": "OpenMedia-Crawler/1.0",
+      "custom_headers": {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "es-AR,es;q=0.9"
+      }
+    }
+  ]
+} 
