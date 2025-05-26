@@ -1,141 +1,44 @@
-# OpenMedia Crawlers Makefile
+# OpenMedia News Monitor Makefile
 
-.PHONY: help setup start stop restart status logs test clean build shell validate
+.PHONY: help install run test clean
 
 # Default target
 help:
-	@echo "OpenMedia Crawlers - Comandos disponibles:"
+	@echo "🚀 OpenMedia News Monitor - Comandos disponibles:"
 	@echo ""
-	@echo "  make setup      - Configurar el entorno inicial"
-	@echo "  make start      - Iniciar todos los servicios"
-	@echo "  make stop       - Detener todos los servicios"
-	@echo "  make restart    - Reiniciar todos los servicios"
-	@echo "  make status     - Ver estado del sistema"
-	@echo "  make logs       - Ver logs de todos los servicios"
-	@echo "  make test       - Ejecutar tests"
-	@echo "  make clean      - Limpiar contenedores y volúmenes"
-	@echo "  make build      - Reconstruir imágenes Docker"
-	@echo "  make shell      - Abrir shell en contenedor"
-	@echo "  make validate   - Validar configuración del sistema"
-	@echo ""
-	@echo "Comandos específicos:"
-	@echo "  make logs-crawler1  - Logs del crawler 1"
-	@echo "  make logs-crawler2  - Logs del crawler 2"
-	@echo "  make logs-registry  - Logs del registry"
-	@echo "  make test-health    - Solo health checks"
+	@echo "  make install    - Instalar dependencias"
+	@echo "  make run        - Ejecutar el monitor"
+	@echo "  make test       - Probar el monitor (sin Kafka)"
+	@echo "  make clean      - Limpiar archivos temporales"
 	@echo ""
 
-# Configuración inicial
-setup:
-	@echo "🚀 Configurando entorno..."
-	@chmod +x scripts/*.sh
-	@./scripts/setup.sh
+# Instalar dependencias
+install:
+	@echo "📦 Instalando dependencias..."
+	@pip install -r requirements.txt
+	@echo "✅ Dependencias instaladas"
 
-# Iniciar servicios
-start:
-	@echo "🚀 Iniciando servicios..."
-	@./scripts/dev.sh start
+# Ejecutar el monitor
+run:
+	@echo "🚀 Ejecutando News Monitor..."
+	@python run_monitor.py
 
-# Detener servicios
-stop:
-	@echo "🛑 Deteniendo servicios..."
-	@./scripts/dev.sh stop
-
-# Reiniciar servicios
-restart:
-	@echo "🔄 Reiniciando servicios..."
-	@./scripts/dev.sh restart
-
-# Ver estado
-status:
-	@./scripts/monitor.sh status
-
-# Ver logs
-logs:
-	@docker-compose logs -f --tail=100
-
-# Logs específicos
-logs-crawler1:
-	@docker-compose logs -f --tail=100 news-crawler-1
-
-logs-crawler2:
-	@docker-compose logs -f --tail=100 news-crawler-2
-
-logs-registry:
-	@docker-compose logs -f --tail=100 crawler-registry
-
-logs-scheduler:
-	@docker-compose logs -f --tail=100 url-scheduler
-
-logs-site-manager:
-	@docker-compose logs -f --tail=100 site-manager
-
-# Ejecutar tests
+# Probar sin Kafka
 test:
-	@./scripts/test.sh all
+	@echo "🧪 Probando monitor (sin Kafka)..."
+	@python -c "from crawlers.news_monitor import NewsMonitor; import asyncio; asyncio.run(NewsMonitor(enable_kafka=False).monitor_site('emol', NewsMonitor()._load_site_configs()['emol']))"
 
-test-health:
-	@./scripts/test.sh health
-
-test-api:
-	@./scripts/test.sh api
-
-# Limpiar
+# Limpiar archivos temporales
 clean:
-	@echo "🧹 Limpiando..."
-	@./scripts/dev.sh clean
+	@echo "🧹 Limpiando archivos temporales..."
+	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	@find . -type f -name "*.pyc" -delete 2>/dev/null || true
+	@echo "✅ Limpieza completada"
 
-# Construir imágenes
-build:
-	@echo "🔨 Construyendo imágenes..."
-	@docker-compose build
-
-# Shell interactivo
-shell:
-	@docker-compose exec news-crawler-1 /bin/bash
-
-# Shell en servicio específico
-shell-registry:
-	@docker-compose exec crawler-registry /bin/bash
-
-shell-scheduler:
-	@docker-compose exec url-scheduler /bin/bash
-
-# Monitoreo continuo
-watch:
-	@./scripts/monitor.sh watch
-
-# Verificar sintaxis de configuración
-check-config:
-	@echo "🔍 Verificando configuraciones..."
-	@python -m json.tool config/sites/chile_news.json > /dev/null && echo "✅ chile_news.json válido" || echo "❌ chile_news.json inválido"
-
-# Ver métricas
-metrics:
-	@curl -s http://localhost:8083/metrics | jq '.' || echo "❌ Servicio de monitoreo no disponible"
-
-# Registrar sitios
-register-sites:
-	@./scripts/register-sites.sh
-
-# Estado de la infraestructura
-infra-status:
-	@echo "🏗️ Estado de la infraestructura:"
-	@docker ps --format "table {{.Names}}\t{{.Status}}" | grep -E "(kafka|pgvector|zookeeper|redis)"
-
-# Desarrollo local con Python
-dev-local:
-	@echo "🐍 Configurando entorno Python local..."
-	@python -m venv venv || true
-	@echo "✅ Activar con: source venv/bin/activate"
-	@echo "✅ Instalar deps: pip install -r requirements.txt"
-
-# Validar configuración
-validate:
-	@chmod +x scripts/validate.sh
-	@./scripts/validate.sh
-
-# Debug crawler
-debug:
-	@chmod +x scripts/debug-crawler.sh
-	@./scripts/debug-crawler.sh 
+# Setup completo
+setup: install
+	@echo "⚙️ Configurando entorno..."
+	@cp env.example .env 2>/dev/null || true
+	@echo "✅ Setup completado"
+	@echo ""
+	@echo "🎯 Para ejecutar: make run" 

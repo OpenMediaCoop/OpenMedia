@@ -1,8 +1,7 @@
 """
-Crawler implementations package.
+News Monitor package - Simple and effective news monitoring.
 """
 
-from .base_crawler import BaseCrawler
-from .news_crawler import NewsCrawler
+from .news_monitor import NewsMonitor
 
-__all__ = ['BaseCrawler', 'NewsCrawler'] 
+__all__ = ['NewsMonitor'] 

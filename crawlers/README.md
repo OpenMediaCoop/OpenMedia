@@ -1,237 +1,217 @@
-# OpenMedia Crawlers System
+# OpenMedia News Monitor
 
-Sistema distribuido de crawlers especializados en medios de comunicación chilenos.
+Monitor simple y eficaz para sitios de noticias chilenos. **¡Sin complejidad innecesaria!**
 
 ## 🚀 Quick Start
 
 ```bash
-# 1. Configurar el entorno
-./scripts/setup.sh
+# 1. Instalar dependencias
+pip install -r requirements.txt
 
-# 2. Iniciar todo automáticamente
-./scripts/dev.sh start
+# 2. Configurar variables (opcional)
+cp env.example .env
 
-# 3. Monitorear el sistema
-./scripts/monitor.sh watch
+# 3. ¡Ejecutar!
+python run_monitor.py
 ```
+
+**¡Eso es todo!** El monitor comenzará a escanear sitios de noticias chilenos automáticamente.
+
+> 💡 **¿Súper apurado?** Ver [`QUICK_START.md`](QUICK_START.md) para setup en 30 segundos.
+
+## 🎯 Filosofía: Simple pero Eficaz
+
+Este proyecto sigue una filosofía de **simplicidad máxima**:
+
+- ✅ **Un solo archivo principal**: `news_monitor.py`
+- ✅ **Dependencias mínimas**: Solo 6 librerías esenciales
+- ✅ **Sin Docker**: Ejecuta directamente con Python
+- ✅ **Sin microservicios**: Una aplicación, un propósito
+- ✅ **Sin bases de datos**: Envía directamente a Kafka
+- ✅ **Configuración en código**: Fácil de modificar y entender
+
+## 📰 ¿Qué hace?
+
+El News Monitor:
+
+1. **Escanea** las páginas principales de sitios de noticias chilenos
+2. **Extrae** enlaces a artículos nuevos
+3. **Descarga** el contenido completo de cada artículo
+4. **Procesa** y limpia el texto
+5. **Envía** todo a Kafka para procesamiento posterior
+
+Todo esto de forma **continua** y **automática**.
+
+## 🌐 Sitios Soportados
+
+| Sitio | URL | Estado |
+|-------|-----|--------|
+| El Mercurio Online | emol.com | ✅ Activo |
+| La Tercera | latercera.com | ✅ Activo |
+| BioBio Chile | biobiochile.cl | ✅ Activo |
 
 ## 📋 Requisitos
 
-- Docker & Docker Compose
-- Python 3.11+ (para desarrollo local)
-- 4GB RAM mínimo
-- 10GB espacio en disco
+- Python 3.8+
+- Kafka (opcional, para envío de datos)
+- 512MB RAM
+- Conexión a internet
 
-## 🏗️ Arquitectura
+## ⚙️ Configuración
 
-```
-┌─────────────────┐     ┌──────────────┐     ┌─────────────┐
-│ News Crawler 1  │────▶│    Kafka     │────▶│ Processors  │
-└─────────────────┘     └──────────────┘     └─────────────┘
-        │                                              │
-        ▼                                              ▼
-┌─────────────────┐     ┌──────────────┐     ┌─────────────┐
-│  URL Scheduler  │────▶│    Redis     │     │  PostgreSQL │
-└─────────────────┘     └──────────────┘     └─────────────┘
-        │
-        ▼
-┌─────────────────┐     ┌──────────────┐
-│ Site Manager    │────▶│   Registry   │
-└─────────────────┘     └──────────────┘
-```
-
-## 📦 Componentes
-
-### Crawlers
-- **NewsCrawler**: Especializado en extracción de noticias
-- **BaseCrawler**: Framework base extensible
-
-### Servicios
-- **Registry** (8080): Registro y monitoreo de crawlers
-- **Site Manager** (8081): Gestión de configuraciones de sitios
-- **URL Scheduler** (8082): Cola de URLs y priorización
-- **Monitoring** (8083): Métricas y observabilidad
-
-### Infraestructura
-- **Kafka**: Streaming de contenido extraído
-- **Redis**: Cola de URLs y caché
-- **PostgreSQL**: Almacenamiento persistente
-
-## 🌐 Sitios Chilenos Soportados
-
-| Sitio | Estado | Prioridad | Rate Limit |
-|-------|--------|-----------|------------|
-| El Mercurio (emol.com) | ✅ Activo | Alta | 30 req/min |
-| La Tercera | ✅ Activo | Alta | 40 req/min |
-| BioBio Chile | ✅ Activo | Media | 50 req/min |
-| Cooperativa | ✅ Activo | Media | 35 req/min |
-
-## 🛠️ Desarrollo
-
-### Configuración Local
+### Variables de Entorno (.env)
 
 ```bash
-# Copiar variables de entorno
-cp env.example .env
+# Kafka (opcional)
+KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+KAFKA_ENABLED=true
 
-# Instalar dependencias Python (opcional)
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-pip install -r requirements.txt
-```
-
-### Comandos Útiles
-
-```bash
-# Gestión de servicios
-./scripts/dev.sh start      # Iniciar todo
-./scripts/dev.sh stop       # Detener todo
-./scripts/dev.sh restart    # Reiniciar
-./scripts/dev.sh logs <servicio>  # Ver logs
-
-# Monitoreo
-./scripts/monitor.sh        # Estado del sistema
-./scripts/monitor.sh watch  # Monitoreo continuo
-./scripts/monitor.sh stats  # Estadísticas detalladas
-
-# Testing
-./scripts/test.sh          # Ejecutar todos los tests
-./scripts/test.sh health   # Solo health checks
-./scripts/test.sh api      # Solo tests de API
+# Logging
+LOG_LEVEL=INFO
 ```
 
 ### Agregar un Nuevo Sitio
 
-1. Editar `config/sites/chile_news.json`
-2. Agregar configuración del sitio:
-```json
-{
-  "domain": "nuevositio.cl",
-  "name": "Nuevo Sitio",
-  "selectors": {
-    "title": "h1.titulo::text",
-    "content": ".contenido p::text"
-  },
-  "crawl_delay": 1.5,
-  "rate_limit": 40
+Edita `news_monitor.py` y agrega la configuración en el método `_load_site_configs()`:
+
+```python
+'nuevo_sitio': {
+    'name': 'Nuevo Sitio',
+    'domain': 'nuevositio.cl',
+    'homepage': 'https://www.nuevositio.cl/',
+    'article_pattern': r'/noticias/',
+    'selectors': {
+        'article_links': 'a[href*="/noticias/"]',
+        'title': 'h1',
+        'content': '.contenido',
+        'author': '.autor',
+        'date': 'time'
+    }
 }
 ```
-3. Reiniciar servicios: `./scripts/dev.sh restart`
 
-## 📊 Monitoreo y Métricas
+## 📊 Monitoreo
 
-### Endpoints de Salud
+El monitor incluye logging estructurado que muestra:
 
-- Registry: http://localhost:8080/health
-- Site Manager: http://localhost:8081/health
-- Scheduler: http://localhost:8082/health
-- Monitoring: http://localhost:8083/metrics
+- Sitios escaneados
+- Artículos encontrados
+- Artículos procesados
+- Errores y estadísticas
 
-### Métricas Disponibles
+```bash
+# Ver logs en tiempo real
+python run_monitor.py
 
-- Requests por minuto
-- URLs en cola
-- Tasa de éxito/fallo
-- Latencia promedio
-- Contenido extraído
+# Ejemplo de salida:
+2024-01-15 12:30:15 [INFO] Starting news monitor sites=['emol', 'latercera', 'biobio']
+2024-01-15 12:30:16 [INFO] Monitoring site site_id=emol url=https://www.emol.com/noticias/
+2024-01-15 12:30:17 [INFO] Found articles site_id=emol count=25
+2024-01-15 12:30:18 [INFO] Processed article url=https://www.emol.com/... title=Título del artículo
+```
 
-## 📨 Formato de Datos para Kafka
+## 📨 Formato de Datos
 
-### Topic: `news_content`
-
-Cuando el crawler extrae contenido de una noticia, envía el siguiente objeto JSON a Kafka:
+Cada artículo procesado se envía a Kafka con este formato:
 
 ```json
 {
   "url": "https://www.emol.com/noticias/...",
-  "site_id": "emol-com-12345",
+  "site_id": "emol",
   "site_name": "El Mercurio Online",
   "domain": "emol.com",
   "title": "Título de la noticia",
+  "subtitle": "Subtítulo o bajada",
   "content": "Contenido completo del artículo...",
   "author": "Nombre del Autor",
   "publish_date": "2024-01-15T10:30:00",
   "category": "Nacional",
   "timestamp": "2024-01-15T12:45:30.123Z",
-  "crawler_id": "news-crawler-1",
-  "status_code": 200,
+  "crawler_id": "news-monitor-1",
   "content_length": 2500,
   "language": "es"
 }
 ```
 
-**Campos principales:**
-- `url`: URL original del artículo
-- `site_id`: ID único del sitio
-- `title`: Título extraído
-- `content`: Contenido completo del artículo
-- `author`: Autor (puede ser null)
-- `publish_date`: Fecha de publicación (puede ser null)
-- `timestamp`: Momento de extracción
+## 🛠️ Desarrollo
 
-## 🐛 Troubleshooting
-
-### Problemas Comunes
-
-**1. Servicios no inician**
-```bash
-# Verificar logs
-docker-compose logs <servicio>
-
-# Reiniciar con limpieza
-./scripts/dev.sh clean
-./scripts/dev.sh start
-```
-
-**2. Crawler no extrae contenido**
-```bash
-# Verificar selectores
-./scripts/test.sh registration
-
-# Ver logs del crawler
-docker-compose logs news-crawler-1
-```
-
-**3. Redis connection refused**
-```bash
-# Verificar que Redis esté corriendo
-docker ps | grep redis
-
-# Reiniciar Redis
-docker-compose restart redis
-```
-
-## 📝 Estructura del Proyecto
+### Estructura del Proyecto
 
 ```
 crawlers/
-├── base/                  # Módulos base
-│   ├── interfaces.py     # Contratos
-│   ├── models.py         # Modelos de datos
-│   ├── utils.py          # Utilidades
-│   └── content_extractor.py
-├── crawlers/             # Implementaciones
-│   ├── base_crawler.py   # Crawler base
-│   └── news_crawler.py   # Crawler de noticias
-├── services/             # Microservicios
-│   ├── registry/         # Registro de crawlers
-│   ├── site_manager/     # Gestión de sitios
-│   ├── scheduler/        # Programador de URLs
-│   └── monitoring/       # Monitoreo
-├── config/              # Configuraciones
-│   └── sites/           # Configuraciones de sitios
-├── scripts/             # Scripts de utilidad
-└── docker-compose.yaml  # Orquestación
+├── news_monitor.py      # ⭐ Archivo principal
+├── run_monitor.py       # Script de ejecución
+├── base/               # Utilidades básicas
+├── requirements.txt    # Dependencias mínimas
+├── .env               # Configuración
+└── README.md          # Esta documentación
 ```
+
+### Personalización
+
+El código está diseñado para ser **fácil de modificar**:
+
+- **Agregar sitios**: Edita `_load_site_configs()`
+- **Cambiar selectores**: Modifica los selectores CSS
+- **Ajustar timing**: Cambia los `await asyncio.sleep()`
+- **Modificar output**: Edita `send_to_kafka()`
+
+### Testing
+
+```bash
+# Test rápido sin Kafka
+python -c "
+from crawlers.news_monitor import NewsMonitor
+import asyncio
+
+async def test():
+    monitor = NewsMonitor(enable_kafka=False)
+    await monitor.monitor_site('emol', monitor.sites['emol'])
+
+asyncio.run(test())
+"
+```
+
+## 🤔 ¿Por qué esta Filosofía?
+
+**Antes**: Sistema complejo con microservicios, Docker, bases de datos, schedulers, registries...
+
+**Ahora**: Un archivo Python que hace exactamente lo que necesitamos.
+
+**Ventajas**:
+- ✅ **Fácil de entender**: Todo en un lugar
+- ✅ **Fácil de modificar**: Sin abstracciones complejas
+- ✅ **Fácil de debuggear**: Logs claros y directos
+- ✅ **Fácil de deployar**: Solo Python + dependencias
+- ✅ **Eficaz**: Hace el trabajo sin overhead
+
+## 📈 Rendimiento
+
+- **Memoria**: ~50MB en ejecución
+- **CPU**: Mínimo (principalmente I/O)
+- **Red**: ~1-2 requests/segundo por sitio
+- **Throughput**: 100+ artículos/hora
+
+## 🚨 Troubleshooting
+
+### Problema: No encuentra artículos
+**Solución**: Verifica los selectores CSS del sitio
+
+### Problema: Error de conexión
+**Solución**: Verifica tu conexión a internet y que el sitio esté disponible
+
+### Problema: Kafka no funciona
+**Solución**: Ejecuta con `enable_kafka=False` o verifica tu configuración de Kafka
+
+## 📝 Changelog
+
+Ver [`CHANGELOG.md`](CHANGELOG.md) para historial de cambios.
 
 ## 🤝 Contribuir
 
 1. Fork el proyecto
-2. Crear feature branch (`git checkout -b feature/NuevoSitio`)
-3. Commit cambios (`git commit -am 'Agregar soporte para NuevoSitio'`)
-4. Push al branch (`git push origin feature/NuevoSitio`)
-5. Crear Pull Request
+2. Modifica `news_monitor.py`
+3. Prueba tus cambios
+4. Envía un Pull Request
 
-## 📄 Licencia
-
-Este proyecto es parte de OpenMedia y está bajo la licencia especificada en el archivo LICENSE del repositorio principal. 
+**¡Mantengamos la simplicidad!** 

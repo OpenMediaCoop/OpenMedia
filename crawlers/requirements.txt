@@ -1,48 +1,7 @@
-# Core Web Framework
-fastapi>=0.100.0
-uvicorn[standard]>=0.20.0
-pydantic>=2.0.0
-python-multipart>=0.0.6
-
-# HTTP and Networking
+# Essential dependencies for News Monitor
 requests>=2.30.0
-aiohttp>=3.8.0
-httpx>=0.24.0
-
-# Message Queue and Streaming
-kafka-python>=2.0.0
-aiokafka>=0.10.0
-
-# Database and Storage
-redis>=4.0.0
-psycopg2-binary>=2.9.0
-sqlalchemy>=2.0.0
-
-# HTML Parsing and Content Extraction
 beautifulsoup4>=4.12.0
-lxml>=4.9.0
-selectolax>=0.3.0
-
-# Web Crawling Framework
-scrapy>=2.10.0
-scrapy-splash>=0.8.0
-
-# URL and Domain Handling
-tldextract>=5.0.0
-validators>=0.20.0
-
-# Scheduling and Background Tasks
-apscheduler>=3.10.0
-
-# Monitoring and Metrics
-prometheus-client>=0.15.0
+kafka-python>=2.0.0
 structlog>=23.0.0
-
-# Configuration and Environment
-pyyaml>=6.0.0
 python-dotenv>=1.0.0
-click>=8.0.0
-
-# Utilities
-python-dateutil>=2.8.0
-pytz>=2023.0 
+python-dateutil>=2.8.0 
