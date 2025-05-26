@@ -1,0 +1,63 @@
+{
+  "crawler": {
+    "user_agent": "OpenMedia-Crawler/1.0 (Development)",
+    "default_delay": 1.0,
+    "max_delay": 5.0,
+    "concurrent_requests": 2,
+    "timeout": 30,
+    "max_retries": 3,
+    "retry_delay": 5.0
+  },
+  "redis": {
+    "host": "localhost",
+    "port": 6380,
+    "db": 0,
+    "password": null,
+    "decode_responses": true
+  },
+  "kafka": {
+    "bootstrap_servers": "localhost:9092",
+    "topics": {
+      "content": "content.extracted",
+      "urls": "urls.discovered",
+      "metrics": "crawl.metrics"
+    },
+    "producer_config": {
+      "compression_type": "gzip",
+      "max_request_size": 1048576
+    }
+  },
+  "postgres": {
+    "host": "localhost",
+    "port": 5432,
+    "database": "scrapper",
+    "user": "postgres",
+    "password": "postgres"
+  },
+  "services": {
+    "registry": {
+      "url": "http://localhost:8080",
+      "heartbeat_interval": 30
+    },
+    "site_manager": {
+      "url": "http://localhost:8081",
+      "cache_ttl": 300
+    },
+    "scheduler": {
+      "url": "http://localhost:8082",
+      "batch_size": 10
+    }
+  },
+  "logging": {
+    "level": "DEBUG",
+    "format": "json",
+    "handlers": ["console", "file"],
+    "file_path": "logs/crawler.log"
+  },
+  "test_mode": {
+    "enabled": true,
+    "mock_downloads": false,
+    "save_responses": true,
+    "response_dir": "data/test_responses"
+  }
+} 

@@ -1,206 +1,237 @@
-# Distributed Web Crawler Architecture
+# OpenMedia Crawlers System
 
-This module implements a distributed web crawler system designed for global scale news collection. The architecture follows microservices patterns with Docker containerization and Kafka-based event streaming.
+Sistema distribuido de crawlers especializados en medios de comunicación chilenos.
 
-## Architecture Overview
-
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  Crawler        │    │  Site Manager   │    │  URL Scheduler  │
-│  Registry       │    │  Service        │    │  Service        │
-│                 │    │                 │    │                 │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         └───────────────────────┼───────────────────────┘
-                                 │
-         ┌───────────────────────┼───────────────────────┐
-         │                       │                       │
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  News Crawler   │    │  Generic        │    │  Monitoring     │
-│  Instance 1     │    │  Crawler        │    │  Service        │
-│                 │    │  Instance N     │    │                 │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         └───────────────────────┼───────────────────────┘
-                                 │
-                    ┌─────────────────┐
-                    │     Kafka       │
-                    │   (External)    │
-                    │                 │
-                    └─────────────────┘
-```
-
-## Services
-
-### Core Services
-- **Crawler Registry**: Manages crawler instances and their assignments
-- **Site Manager**: Handles site configurations and policies
-- **URL Scheduler**: Manages URL frontier and scheduling
-- **Monitoring**: Collects metrics and health status
-
-### Crawler Instances
-- **News Crawler**: Specialized for news sites with content extraction
-- **Generic Crawler**: General purpose web crawler
-- **Custom Crawlers**: Site-specific implementations
-
-## Quick Start
-
-### Prerequisites
-- Docker and Docker Compose installed
-- At least 4GB RAM available
-- Ports 6379, 8080-8083, 9092, 2181, 5432 available
-
-### 🚀 Production Setup (Recommended)
-
-1. **Run the setup script**:
-   ```bash
-   cd crawlers
-   ./scripts/setup.sh
-   ```
-
-2. **Start the infrastructure** (Kafka, PostgreSQL, Zookeeper):
-   ```bash
-   # From project root
-   docker-compose -f docker-compose.global.yaml up -d
-   ```
-
-3. **Start crawler services**:
-   ```bash
-   cd crawlers
-   docker-compose up -d
-   ```
-
-4. **Register sites and start crawling**:
-   ```bash
-   ./scripts/register-sites.sh
-   ./scripts/start-crawling.sh
-   ```
-
-### 🛠️ Manual Setup (Development)
-
-1. **Start infrastructure**:
-   ```bash
-   docker-compose -f docker-compose.global.yaml up -d
-   ```
-
-2. **Build and start crawlers**:
-   ```bash
-   cd crawlers
-   docker-compose up -d --build
-   ```
-
-3. **Wait for services to be ready** (check health):
-   ```bash
-   curl http://localhost:8080/health  # Registry
-   curl http://localhost:8081/health  # Site Manager
-   curl http://localhost:8082/health  # Scheduler
-   curl http://localhost:8083/health  # Monitoring
-   ```
-
-4. **Register a site**:
-   ```bash
-   curl -X POST http://localhost:8081/sites \
-     -H "Content-Type: application/json" \
-     -d @config/sites/chile_news.json
-   ```
-
-5. **Start crawling**:
-   ```bash
-   curl -X POST http://localhost:8080/crawlers/start
-   ```
-
-## Configuration
-
-Site configurations are stored in `config/sites/` directory. Each site defines:
-- Domain and allowed URLs
-- Content extraction selectors
-- Rate limiting and politeness policies
-- Priority and scheduling preferences
-
-## Monitoring
-
-- **Health checks**: `http://localhost:8083/health`
-- **Metrics**: `http://localhost:8083/metrics`
-- **Crawler status**: `http://localhost:8080/status`
-
-## Development
-
-### 🔧 Local Development Commands
-
-**Quick development setup (recommended):**
-```bash
-cd crawlers
-./scripts/dev.sh start    # Start everything
-./scripts/dev.sh status   # Check status
-./scripts/dev.sh monitor  # Advanced monitoring dashboard
-./scripts/dev.sh logs news-crawler-1  # View logs
-./scripts/dev.sh stop     # Stop everything
-```
-
-**Manual commands:**
-
-**Start infrastructure only:**
-```bash
-docker-compose -f docker-compose.global.yaml up -d
-```
-
-**Build and start all services:**
-```bash
-cd crawlers
-docker-compose up -d --build
-```
-
-**View logs:**
-```bash
-docker-compose logs -f crawler-registry
-docker-compose logs -f news-crawler-1
-docker-compose logs -f site-manager
-```
-
-**Stop all services:**
-```bash
-docker-compose down
-docker-compose -f ../docker-compose.global.yaml down
-```
-
-**Restart a specific service:**
-```bash
-docker-compose restart news-crawler-1
-```
-
-**Check service status:**
-```bash
-docker-compose ps
-curl http://localhost:8080/health
-curl http://localhost:8081/health
-curl http://localhost:8082/health
-curl http://localhost:8083/health
-```
-
-### Adding a New Site
-1. Create configuration in `config/sites/`
-2. Register via Site Manager API
-3. Crawler will automatically pick up new sites
-
-### Custom Crawler Implementation
-1. Extend `BaseCrawler` class
-2. Implement required methods
-3. Add to docker-compose configuration
-
-## Testing
-
-Run automated tests to verify system functionality:
+## 🚀 Quick Start
 
 ```bash
-./scripts/test.sh           # Run all tests
-./scripts/test.sh health    # Test service health only
-./scripts/test.sh api       # Test API endpoints
-./scripts/test.sh docker    # Test Docker services
+# 1. Configurar el entorno
+./scripts/setup.sh
+
+# 2. Iniciar todo automáticamente
+./scripts/dev.sh start
+
+# 3. Monitorear el sistema
+./scripts/monitor.sh watch
 ```
 
-## API Documentation
+## 📋 Requisitos
 
-- **Crawler Registry**: `http://localhost:8080/docs`
-- **Site Manager**: `http://localhost:8081/docs`
-- **URL Scheduler**: `http://localhost:8082/docs`
-- **Monitoring**: `http://localhost:8083/docs` 
+- Docker & Docker Compose
+- Python 3.11+ (para desarrollo local)
+- 4GB RAM mínimo
+- 10GB espacio en disco
+
+## 🏗️ Arquitectura
+
+```
+┌─────────────────┐     ┌──────────────┐     ┌─────────────┐
+│ News Crawler 1  │────▶│    Kafka     │────▶│ Processors  │
+└─────────────────┘     └──────────────┘     └─────────────┘
+        │                                              │
+        ▼                                              ▼
+┌─────────────────┐     ┌──────────────┐     ┌─────────────┐
+│  URL Scheduler  │────▶│    Redis     │     │  PostgreSQL │
+└─────────────────┘     └──────────────┘     └─────────────┘
+        │
+        ▼
+┌─────────────────┐     ┌──────────────┐
+│ Site Manager    │────▶│   Registry   │
+└─────────────────┘     └──────────────┘
+```
+
+## 📦 Componentes
+
+### Crawlers
+- **NewsCrawler**: Especializado en extracción de noticias
+- **BaseCrawler**: Framework base extensible
+
+### Servicios
+- **Registry** (8080): Registro y monitoreo de crawlers
+- **Site Manager** (8081): Gestión de configuraciones de sitios
+- **URL Scheduler** (8082): Cola de URLs y priorización
+- **Monitoring** (8083): Métricas y observabilidad
+
+### Infraestructura
+- **Kafka**: Streaming de contenido extraído
+- **Redis**: Cola de URLs y caché
+- **PostgreSQL**: Almacenamiento persistente
+
+## 🌐 Sitios Chilenos Soportados
+
+| Sitio | Estado | Prioridad | Rate Limit |
+|-------|--------|-----------|------------|
+| El Mercurio (emol.com) | ✅ Activo | Alta | 30 req/min |
+| La Tercera | ✅ Activo | Alta | 40 req/min |
+| BioBio Chile | ✅ Activo | Media | 50 req/min |
+| Cooperativa | ✅ Activo | Media | 35 req/min |
+
+## 🛠️ Desarrollo
+
+### Configuración Local
+
+```bash
+# Copiar variables de entorno
+cp env.example .env
+
+# Instalar dependencias Python (opcional)
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+pip install -r requirements.txt
+```
+
+### Comandos Útiles
+
+```bash
+# Gestión de servicios
+./scripts/dev.sh start      # Iniciar todo
+./scripts/dev.sh stop       # Detener todo
+./scripts/dev.sh restart    # Reiniciar
+./scripts/dev.sh logs <servicio>  # Ver logs
+
+# Monitoreo
+./scripts/monitor.sh        # Estado del sistema
+./scripts/monitor.sh watch  # Monitoreo continuo
+./scripts/monitor.sh stats  # Estadísticas detalladas
+
+# Testing
+./scripts/test.sh          # Ejecutar todos los tests
+./scripts/test.sh health   # Solo health checks
+./scripts/test.sh api      # Solo tests de API
+```
+
+### Agregar un Nuevo Sitio
+
+1. Editar `config/sites/chile_news.json`
+2. Agregar configuración del sitio:
+```json
+{
+  "domain": "nuevositio.cl",
+  "name": "Nuevo Sitio",
+  "selectors": {
+    "title": "h1.titulo::text",
+    "content": ".contenido p::text"
+  },
+  "crawl_delay": 1.5,
+  "rate_limit": 40
+}
+```
+3. Reiniciar servicios: `./scripts/dev.sh restart`
+
+## 📊 Monitoreo y Métricas
+
+### Endpoints de Salud
+
+- Registry: http://localhost:8080/health
+- Site Manager: http://localhost:8081/health
+- Scheduler: http://localhost:8082/health
+- Monitoring: http://localhost:8083/metrics
+
+### Métricas Disponibles
+
+- Requests por minuto
+- URLs en cola
+- Tasa de éxito/fallo
+- Latencia promedio
+- Contenido extraído
+
+## 📨 Formato de Datos para Kafka
+
+### Topic: `news_content`
+
+Cuando el crawler extrae contenido de una noticia, envía el siguiente objeto JSON a Kafka:
+
+```json
+{
+  "url": "https://www.emol.com/noticias/...",
+  "site_id": "emol-com-12345",
+  "site_name": "El Mercurio Online",
+  "domain": "emol.com",
+  "title": "Título de la noticia",
+  "content": "Contenido completo del artículo...",
+  "author": "Nombre del Autor",
+  "publish_date": "2024-01-15T10:30:00",
+  "category": "Nacional",
+  "timestamp": "2024-01-15T12:45:30.123Z",
+  "crawler_id": "news-crawler-1",
+  "status_code": 200,
+  "content_length": 2500,
+  "language": "es"
+}
+```
+
+**Campos principales:**
+- `url`: URL original del artículo
+- `site_id`: ID único del sitio
+- `title`: Título extraído
+- `content`: Contenido completo del artículo
+- `author`: Autor (puede ser null)
+- `publish_date`: Fecha de publicación (puede ser null)
+- `timestamp`: Momento de extracción
+
+## 🐛 Troubleshooting
+
+### Problemas Comunes
+
+**1. Servicios no inician**
+```bash
+# Verificar logs
+docker-compose logs <servicio>
+
+# Reiniciar con limpieza
+./scripts/dev.sh clean
+./scripts/dev.sh start
+```
+
+**2. Crawler no extrae contenido**
+```bash
+# Verificar selectores
+./scripts/test.sh registration
+
+# Ver logs del crawler
+docker-compose logs news-crawler-1
+```
+
+**3. Redis connection refused**
+```bash
+# Verificar que Redis esté corriendo
+docker ps | grep redis
+
+# Reiniciar Redis
+docker-compose restart redis
+```
+
+## 📝 Estructura del Proyecto
+
+```
+crawlers/
+├── base/                  # Módulos base
+│   ├── interfaces.py     # Contratos
+│   ├── models.py         # Modelos de datos
+│   ├── utils.py          # Utilidades
+│   └── content_extractor.py
+├── crawlers/             # Implementaciones
+│   ├── base_crawler.py   # Crawler base
+│   └── news_crawler.py   # Crawler de noticias
+├── services/             # Microservicios
+│   ├── registry/         # Registro de crawlers
+│   ├── site_manager/     # Gestión de sitios
+│   ├── scheduler/        # Programador de URLs
+│   └── monitoring/       # Monitoreo
+├── config/              # Configuraciones
+│   └── sites/           # Configuraciones de sitios
+├── scripts/             # Scripts de utilidad
+└── docker-compose.yaml  # Orquestación
+```
+
+## 🤝 Contribuir
+
+1. Fork el proyecto
+2. Crear feature branch (`git checkout -b feature/NuevoSitio`)
+3. Commit cambios (`git commit -am 'Agregar soporte para NuevoSitio'`)
+4. Push al branch (`git push origin feature/NuevoSitio`)
+5. Crear Pull Request
+
+## 📄 Licencia
+
+Este proyecto es parte de OpenMedia y está bajo la licencia especificada en el archivo LICENSE del repositorio principal. 

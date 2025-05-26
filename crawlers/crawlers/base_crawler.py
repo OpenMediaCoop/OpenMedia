@@ -194,11 +194,22 @@ class OpenMediaSpider(scrapy.Spider):
             topic = 'news_content'
             key = content_data.get('site_id', 'unknown')
             
+            # Log the full content being sent to Kafka
+            self.logger.info(
+                "Sending content to Kafka",
+                topic=topic,
+                key=key,
+                url=content_data.get('url'),
+                title=content_data.get('title', '')[:100],  # First 100 chars of title
+                content_length=len(content_data.get('content', '')),
+                full_data=content_data  # Full data for debugging
+            )
+            
             self.kafka_producer.send(topic, value=content_data, key=key)
-            logger.debug("Content sent to Kafka", url=content_data['url'], topic=topic)
+            self.logger.info("Content successfully sent to Kafka", url=content_data['url'], topic=topic)
             
         except Exception as e:
-            logger.error("Failed to send to Kafka", error=str(e))
+            self.logger.error("Failed to send to Kafka", error=str(e), url=content_data.get('url'))
 
 
 class BaseCrawler(ICrawler):
@@ -443,9 +454,18 @@ class BaseCrawler(ICrawler):
             
             if response.status_code == 200:
                 sites_data = response.json()
+                self.logger.info("Raw sites data from site manager", count=len(sites_data))
+                
                 for site_data in sites_data:
                     site_config = SiteConfig(**site_data)
                     self.site_configs[site_config.site_id] = site_config
+                    self.logger.debug(
+                        "Loaded site config",
+                        site_id=site_config.site_id,
+                        domain=site_config.domain,
+                        name=site_config.name,
+                        enabled=site_config.enabled
+                    )
                 
                 self.logger.info("Loaded site configurations", count=len(self.site_configs))
             else:
@@ -465,7 +485,12 @@ class BaseCrawler(ICrawler):
             if response.status_code == 200:
                 data = response.json()
                 if data:
+                    self.logger.info("Got URL from scheduler", url=data.get('url'), site_id=data.get('site_id'))
                     return CrawlRequest(**data)
+                else:
+                    self.logger.debug("No URLs available from scheduler")
+            else:
+                self.logger.warning("Scheduler returned non-200 status", status_code=response.status_code)
             
             return None
             
