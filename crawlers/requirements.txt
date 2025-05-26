@@ -1,0 +1,7 @@
+# Essential dependencies for News Monitor
+requests>=2.30.0
+beautifulsoup4>=4.12.0
+kafka-python>=2.0.0
+structlog>=23.0.0
+python-dotenv>=1.0.0
+python-dateutil>=2.8.0 
