@@ -204,43 +204,6 @@ services:
         delay: 30s
         max_attempts: 3
 
-  # Generic Crawler Instance
-  generic-crawler:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: generic-crawler
-    environment:
-      CRAWLER_TYPE: generic
-      CRAWLER_ID: generic-crawler-1
-      REGISTRY_URL: http://crawler-registry:8080
-      SITE_MANAGER_URL: http://site-manager:8081
-      SCHEDULER_URL: http://url-scheduler:8082
-      REDIS_HOST: redis
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      POSTGRES_HOST: pgvector
-      POSTGRES_DB: scrapper
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      DEBUG: "false"
-    volumes:
-      - ./config:/app/config:ro
-    command: ["python", "main.py"]
-    depends_on:
-      crawler-registry:
-        condition: service_healthy
-      site-manager:
-        condition: service_healthy
-      url-scheduler:
-        condition: service_healthy
-    networks:
-      - scrapper-net
-    deploy:
-      restart_policy:
-        condition: on-failure
-        delay: 30s
-        max_attempts: 3
-
 volumes:
   redis_data:
 

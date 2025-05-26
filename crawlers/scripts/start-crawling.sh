@@ -14,7 +14,7 @@ timeout 60 bash -c 'until curl -f $0/health &>/dev/null; do sleep 2; done' $REGI
 
 # Start crawler containers
 echo "🚀 Starting crawler instances..."
-docker-compose up -d news-crawler-1 news-crawler-2 generic-crawler
+docker-compose up -d news-crawler-1 news-crawler-2
 
 # Wait a moment for crawlers to start
 echo "⏳ Waiting for crawlers to initialize..."

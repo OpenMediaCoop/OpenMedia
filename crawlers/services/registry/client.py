@@ -114,7 +114,7 @@ class RegistryClient:
             "sites": [],
             "kafka_topics": {
                 "content_extracted": "content.extracted",
-                "content_generic": "content.generic"
+                "content_news": "content.news"
             }
         }
     

@@ -3,6 +3,7 @@ News-specific crawler implementation.
 """
 import asyncio
 import logging
+import structlog
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
@@ -11,17 +12,19 @@ from base.content_extractor import ContentExtractor
 from base.models import Article
 from base.interfaces import CrawlResult
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class NewsCrawler(BaseCrawler):
     """Specialized crawler for news websites."""
     
-    def __init__(self, crawler_id: str, config: Dict[str, Any]):
-        super().__init__(crawler_id, config)
+    def __init__(self, crawler_id: str = None, config: Dict[str, Any] = None):
+        super().__init__(crawler_id, "news")
         self.content_extractor = ContentExtractor()
+        if config:
+            self.config.update(config)
         
-    async def extract_content(self, url: str, html: str, site_config: Dict[str, Any]) -> Optional[Article]:
+    def extract_content(self, url: str, html: str, site_config: Dict[str, Any]) -> Optional[Article]:
         """Extract article content from HTML."""
         try:
             # Use site-specific selectors if available
@@ -41,7 +44,7 @@ class NewsCrawler(BaseCrawler):
                 return article
                 
         except Exception as e:
-            logger.error(f"Content extraction failed for {url}: {e}")
+            logger.error("Content extraction failed", url=url, error=str(e))
             
         return None
     
@@ -67,23 +70,42 @@ class NewsCrawler(BaseCrawler):
             
         return True
     
-    async def process_crawl_result(self, result: CrawlResult) -> None:
+    def process_crawl_result(self, result: CrawlResult) -> None:
         """Process crawled content and send to appropriate processors."""
         try:
             # Send to content processing pipeline
-            await self.send_to_kafka('content.extracted', {
+            self.send_to_kafka('content.extracted', {
                 'url': result.url,
                 'article': result.content.dict() if result.content else None,
                 'site_id': result.site_id,
-                'crawled_at': result.crawled_at.isoformat(),
+                'crawled_at': result.timestamp.isoformat(),
                 'crawler_id': self.crawler_id
             })
             
             # Update crawl statistics
-            await self.update_crawl_stats(result)
+            self.update_crawl_stats(result)
             
         except Exception as e:
-            logger.error(f"Failed to process crawl result for {result.url}: {e}")
+            logger.error("Failed to process crawl result", url=result.url, error=str(e))
+    
+    def send_to_kafka(self, topic: str, data: Dict[str, Any]) -> None:
+        """Send data to Kafka topic."""
+        try:
+            # This would be implemented with actual Kafka producer
+            logger.info("Sending to Kafka", topic=topic, url=data.get('url'))
+        except Exception as e:
+            logger.error("Failed to send to Kafka", topic=topic, error=str(e))
+    
+    def update_crawl_stats(self, result: CrawlResult) -> None:
+        """Update crawling statistics."""
+        try:
+            # Update internal metrics
+            if result.status_code == 200:
+                self.metrics['requests_successful'] += 1
+            else:
+                self.metrics['requests_failed'] += 1
+        except Exception as e:
+            logger.error("Failed to update crawl stats", error=str(e))
 
 
 async def main():

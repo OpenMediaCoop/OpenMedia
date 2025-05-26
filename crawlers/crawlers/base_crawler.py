@@ -204,12 +204,13 @@ class OpenMediaSpider(scrapy.Spider):
 class BaseCrawler(ICrawler):
     """Base crawler implementation using Scrapy."""
     
-    def __init__(self, crawler_type: str = "base"):
-        self.crawler_id = str(uuid.uuid4())
+    def __init__(self, crawler_id: str = None, crawler_type: str = "base"):
+        self.crawler_id = crawler_id or str(uuid.uuid4())
         self.crawler_type = crawler_type
         self.status = CrawlerStatus.IDLE
         self.config = get_config()
-        self.logger = setup_logging(service_name=f"crawler-{crawler_type}")
+        setup_logging(service_name=f"crawler-{crawler_type}")
+        self.logger = structlog.get_logger(f"crawler-{crawler_type}")
         
         # Service URLs
         self.registry_url = self.config.get('registry_url', 'http://crawler-registry:8080')

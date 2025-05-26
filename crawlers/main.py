@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Main entry point for OpenMedia crawlers.
-Supports both news and generic crawlers.
+Main entry point for OpenMedia news crawlers.
+Specialized for Chilean news sources.
 """
 
 import os
@@ -13,7 +13,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from base.interfaces import CrawlerStatus
-from crawlers.base_crawler import BaseCrawler
+from crawlers.news_crawler import NewsCrawler
 
 # Setup logging
 logging.basicConfig(
@@ -24,19 +24,14 @@ logger = logging.getLogger(__name__)
 
 
 def main():
-    """Main entry point for crawlers."""
+    """Main entry point for news crawlers."""
     try:
         # Get crawler configuration from environment
-        crawler_id = os.getenv('CRAWLER_ID', 'crawler-1')
-        crawler_type = os.getenv('CRAWLER_TYPE', 'generic')  # 'news' or 'generic'
+        crawler_id = os.getenv('CRAWLER_ID', 'news-crawler-1')
         
-        logger.info(f"Starting {crawler_type} crawler with ID: {crawler_id}")
+        logger.info(f"Starting Chilean news crawler with ID: {crawler_id}")
         
-        # Create crawler instance
-        crawler = BaseCrawler(crawler_type=crawler_type)
-        crawler.crawler_id = crawler_id
-        
-        # Initialize crawler with configuration
+        # Create news crawler instance
         config = {
             'registry_url': os.getenv('REGISTRY_URL', 'http://crawler-registry:8080'),
             'site_manager_url': os.getenv('SITE_MANAGER_URL', 'http://site-manager:8081'),
@@ -45,21 +40,23 @@ def main():
             'kafka_bootstrap_servers': os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'kafka:9092'),
         }
         
+        crawler = NewsCrawler(crawler_id, config)
+        
         if not crawler.initialize(config):
-            logger.error("Failed to initialize crawler")
+            logger.error("Failed to initialize news crawler")
             sys.exit(1)
         
-        logger.info("Crawler initialized successfully")
+        logger.info("News crawler initialized successfully")
         
         # Start the crawler main loop
         crawler.run()
         
     except KeyboardInterrupt:
-        logger.info("Shutting down crawler...")
+        logger.info("Shutting down news crawler...")
         if 'crawler' in locals():
             crawler.stop()
     except Exception as e:
-        logger.error(f"Fatal error in crawler: {e}")
+        logger.error(f"Fatal error in news crawler: {e}")
         sys.exit(1)
 
 
