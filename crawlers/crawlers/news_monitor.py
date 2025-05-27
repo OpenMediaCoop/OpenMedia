@@ -4,20 +4,17 @@ Continuously monitors news homepages and extracts article content.
 """
 
 import asyncio
-import time
 import json
 import re
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 from urllib.parse import urljoin, urlparse
-
 import requests
 from bs4 import BeautifulSoup
-from kafka import KafkaProducer
-import structlog
-
-from base.utils import setup_logging, get_config, normalize_url
-
+from base.logger import logger
+from config.sites.base import sites
+from base.utils import *
+from base.kafka import *
 
 class NewsMonitor:
     """
@@ -25,24 +22,8 @@ class NewsMonitor:
     Designed to run continuously and send all content to Kafka.
     """
     
-    def __init__(self, enable_kafka=True):
-        self.config = get_config()
-        setup_logging(service_name="news-monitor")
-        self.logger = structlog.get_logger("news-monitor")
-        
-        # Initialize Kafka producer only if enabled
-        self.kafka_enabled = enable_kafka
-        self.kafka_producer = None
-        if enable_kafka:
-            try:
-                self.kafka_producer = self._init_kafka()
-            except Exception as e:
-                self.logger.warning("Failed to initialize Kafka, running without it", error=str(e))
-                self.kafka_enabled = False
-        
-        # Site configurations
-        self.sites = self._load_site_configs()
-        
+    # Initialize Kafka producer only if enabled
+    def __init__(self):        
         # Request session for better performance
         self.session = requests.Session()
         self.session.headers.update({
@@ -54,172 +35,16 @@ class NewsMonitor:
             'articles_found': 0,
             'articles_processed': 0,
             'errors': 0,
-            'start_time': datetime.utcnow()
-        }
-    
-    def _init_kafka(self) -> KafkaProducer:
-        """Initialize Kafka producer."""
-        kafka_config = self.config.get('kafka', {})
-        return KafkaProducer(
-            bootstrap_servers=kafka_config.get('bootstrap_servers', 'kafka:9092'),
-            value_serializer=lambda v: json.dumps(v, default=str).encode('utf-8'),
-            key_serializer=lambda k: k.encode('utf-8') if k else None
-        )
-    
-    def _load_site_configs(self) -> Dict[str, Dict[str, Any]]:
-        """Load site configurations for Chilean news sites."""
-        # For now, hardcoded configs. Later can load from site manager
-        return {
-            'emol': {
-                'name': 'El Mercurio Online',
-                'domain': 'emol.com',
-                'homepage': 'https://www.emol.com/noticias/',
-                'article_pattern': r'/noticias/[^/]+/\d{4}/\d{2}/\d{2}/\d+/',
-                'selectors': {
-                    'article_links': 'a[href*="/noticias/"]',
-                    'title': 'h1#cuDetalle_cuTitular_tituloNoticia',
-                    'subtitle': 'h2#cuDetalle_cuTitular_bajadaNoticia',
-                    'content': 'div#cuDetalle_cuTexto_textoNoticia',
-                    'author': 'div.info-notaemol-porfecha',
-                    'date': 'meta[property="article:published_time"]',
-                    # Metadatos del <head>
-                    'meta_title': 'title',
-                    'meta_description': 'meta[name="description"]',
-                    'meta_keywords': 'meta[name="keywords"]',
-                    'meta_author': 'meta[name="author"]',
-                    'canonical_url': 'link[rel="canonical"]',
-                    # Open Graph
-                    'og_title': 'meta[property="og:title"]',
-                    'og_description': 'meta[property="og:description"]',
-                    'og_image': 'meta[property="og:image"]',
-                    'og_url': 'meta[property="og:url"]',
-                    'og_site_name': 'meta[property="og:site_name"]',
-                    # Twitter Cards
-                    'twitter_title': 'meta[name="twitter:title"]',
-                    'twitter_description': 'meta[name="twitter:description"]',
-                    'twitter_image': 'meta[name="twitter:image"]',
-                    'twitter_card': 'meta[name="twitter:card"]',
-                    # JSON-LD structured data
-                    'json_ld': 'script[type="application/ld+json"]'
-                }
-            },
-            'latercera': {
-                'name': 'La Tercera',
-                'domain': 'latercera.com',
-                'homepage': 'https://www.latercera.com/',
-                'article_pattern': r'/noticia/',
-                'use_json_ld': True,  # Priorizar JSON-LD
-                'selectors': {
-                    'article_links': 'a[href*="/noticia/"]',
-                    'title': 'h1.article-head__title',
-                    'subtitle': 'h2.article-head__subtitle',
-                    'content': 'main.article-right-rail__main',
-                    'content_paragraphs': 'p.article-body__paragraph',
-                    'author': 'span.article-body__byline__authors',
-                    'author_link': 'a.article-body__byline__author',
-                    'date': 'time.article-body__byline__date',
-                    # Metadatos del <head>
-                    'meta_title': 'title',
-                    'meta_description': 'meta[name="description"]',
-                    'meta_keywords': 'meta[name="keywords"]',
-                    'meta_author': 'meta[name="author"]',
-                    'canonical_url': 'link[rel="canonical"]',
-                    # Open Graph
-                    'og_title': 'meta[property="og:title"]',
-                    'og_description': 'meta[property="og:description"]',
-                    'og_image': 'meta[property="og:image"]',
-                    'og_url': 'meta[property="og:url"]',
-                    'og_site_name': 'meta[property="og:site_name"]',
-                    # Twitter Cards
-                    'twitter_title': 'meta[name="twitter:title"]',
-                    'twitter_description': 'meta[name="twitter:description"]',
-                    'twitter_image': 'meta[name="twitter:image"]',
-                    'twitter_card': 'meta[name="twitter:card"]',
-                    # JSON-LD structured data
-                    'json_ld': 'script[type="application/ld+json"]'
-                }
-            },
-            'biobio': {
-                'name': 'BioBio Chile',
-                'domain': 'biobiochile.cl',
-                'homepage': 'https://www.biobiochile.cl/',
-                'article_pattern': r'/noticias/',
-                'use_json_ld': True,  # Priorizar JSON-LD como La Tercera
-                'selectors': {
-                    'article_links': 'a[href*="/noticias/"]',
-                    # Selectores principales de contenido
-                    'title': 'h1',
-                    'subtitle': 'h2.bajada',
-                    'content': '.post .post-content',  # Contenedor principal del artículo
-                    'content_paragraphs': '.post .post-content p',  # Párrafos específicos
-                    'author': '.autores',  # Selector específico para autores
-                    'author_link': '.autores a',  # Enlaces de autor si existen
-                    'date': 'time',
-                    'date_published': 'meta[itemprop="datePublished"]',  # Microdatos
-                    'date_modified': 'meta[itemprop="dateModified"]',
-                    
-                    # Elementos específicos de BioBio
-                    'article_id': 'meta[name="identrada"]',  # ID interno de la nota
-                    'article_section': 'meta[itemprop="articleSection"]',  # Sección del artículo
-                    'destacador': '.destacador',  # Frases destacadas
-                    'lee_tambien': '.lee-tambien-bbcl',  # Secciones "Leer también"
-                    'wp_caption': '.wp-caption',  # Leyendas de imágenes
-                    'audio_elements': '.wp-audio-shortcode',  # Elementos de audio
-                    
-                    # Metadatos del <head>
-                    'meta_title': 'title',
-                    'meta_description': 'meta[name="description"]',
-                    'meta_keywords': 'meta[name="keywords"]',
-                    'meta_news_keywords': 'meta[name="news_keywords"]',  # Keywords específicas de noticias
-                    'meta_author': 'meta[name="author"]',
-                    'canonical_url': 'link[rel="canonical"]',
-                    'amp_url': 'link[rel="amphtml"]',  # URL de versión AMP
-                    
-                    # Open Graph (Facebook)
-                    'og_title': 'meta[property="og:title"]',
-                    'og_description': 'meta[property="og:description"]',
-                    'og_image': 'meta[property="og:image"]',
-                    'og_url': 'meta[property="og:url"]',
-                    'og_site_name': 'meta[property="og:site_name"]',
-                    'og_type': 'meta[property="og:type"]',
-                    'og_article_author': 'meta[property="article:author"]',
-                    'og_article_section': 'meta[property="article:section"]',
-                    'og_article_published_time': 'meta[property="article:published_time"]',
-                    'og_article_modified_time': 'meta[property="article:modified_time"]',
-                    
-                    # Twitter Cards
-                    'twitter_title': 'meta[name="twitter:title"]',
-                    'twitter_description': 'meta[name="twitter:description"]',
-                    'twitter_image': 'meta[name="twitter:image"]',
-                    'twitter_card': 'meta[name="twitter:card"]',
-                    'twitter_site': 'meta[name="twitter:site"]',
-                    'twitter_creator': 'meta[name="twitter:creator"]',
-                    
-                    # Facebook específicos
-                    'fb_pages': 'meta[property="fb:pages"]',
-                    'fb_app_id': 'meta[property="fb:app_id"]',
-                    'fb_admins': 'meta[property="fb:admins"]',
-                    
-                    # Favicons y Apple Touch Icons
-                    'favicon': 'link[rel="icon"]',
-                    'apple_touch_icon': 'link[rel="apple-touch-icon"]',
-                    
-                    # JSON-LD structured data
-                    'json_ld': 'script[type="application/ld+json"]',
-                    
-                    # Atributos de datos específicos
-                    'data_id_nota': 'head[data-id-nota]'  # ID de nota desde atributo data
-                }
-            }
+            'start_time': datetime.now()
         }
     
     async def start(self):
         """Start monitoring all configured sites."""
-        self.logger.info("Starting news monitor", sites=list(self.sites.keys()))
+        logger.info("Starting news monitor", sites=list(sites.keys()))
         
         while True:
             try:
-                for site_id, site_config in self.sites.items():
+                for site_id, site_config in sites.items():
                     if site_config.get('enabled', True):
                         await self.monitor_site(site_id, site_config)
                 
@@ -227,13 +52,13 @@ class NewsMonitor:
                 await asyncio.sleep(60)  # 1 minute
                 
             except Exception as e:
-                self.logger.error("Error in monitor loop", error=str(e))
+                logger.error("Error in monitor loop", error=str(e))
                 await asyncio.sleep(30)
     
     async def monitor_site(self, site_id: str, site_config: Dict[str, Any]):
         """Monitor a single news site."""
         try:
-            self.logger.info("Monitoring site", site_id=site_id, url=site_config['homepage'])
+            logger.info("Monitoring site", site_id=site_id, url=site_config['homepage'])
             
             # Get homepage
             response = self.session.get(site_config['homepage'], timeout=30)
@@ -243,7 +68,7 @@ class NewsMonitor:
             soup = BeautifulSoup(response.text, 'html.parser')
             article_links = self.extract_article_links(soup, site_config)
             
-            self.logger.info(
+            logger.info(
                 "Found articles", 
                 site_id=site_id, 
                 count=len(article_links)
@@ -255,7 +80,7 @@ class NewsMonitor:
                 await asyncio.sleep(1)  # Be polite between requests
                 
         except Exception as e:
-            self.logger.error("Error monitoring site", site_id=site_id, error=str(e))
+            logger.error("Error monitoring site", site_id=site_id, error=str(e))
             self.stats['errors'] += 1
     
     def extract_article_links(self, soup: BeautifulSoup, site_config: Dict[str, Any]) -> List[str]:
@@ -292,19 +117,19 @@ class NewsMonitor:
             
             if content:
                 # Send to Kafka
-                self.send_to_kafka(content)
+                send_to_kafka(content)
                 self.stats['articles_processed'] += 1
                 
-                self.logger.info(
+                logger.info(
                     "Processed article",
                     url=url,
                     title=content.get('title', '')[:100]
                 )
             else:
-                self.logger.warning("No content extracted", url=url)
+                logger.warning("No content extracted", url=url)
                 
         except Exception as e:
-            self.logger.error("Error processing article", url=url, error=str(e))
+            logger.error("Error processing article", url=url, error=str(e))
             self.stats['errors'] += 1
     
     def extract_article_content(
@@ -345,7 +170,7 @@ class NewsMonitor:
                         elif isinstance(author_data, list) and author_data:
                             author = author_data[0].get('name') if isinstance(author_data[0], dict) else str(author_data[0])
                         
-                        self.logger.debug("Using JSON-LD data", title=title[:50] if title else None)
+                        logger.debug("Using JSON-LD data", title=title[:50] if title else None)
                         break
             
             # Fallback to HTML selectors if JSON-LD didn't provide everything
@@ -449,7 +274,7 @@ class NewsMonitor:
             return None
             
         except Exception as e:
-            self.logger.error("Error extracting content", url=url, error=str(e))
+            logger.error("Error extracting content", url=url, error=str(e))
             return None
     
     def extract_category(self, url: str, soup: BeautifulSoup) -> Optional[str]:
@@ -600,36 +425,14 @@ class NewsMonitor:
                     if isinstance(data, dict):
                         data_type = data.get('@type')
                         if data_type:
-                            self.logger.debug("Found structured data", type=data_type)
+                            logger.debug("Found structured data", type=data_type)
                             
             except json.JSONDecodeError as e:
-                self.logger.warning("Invalid JSON-LD found", error=str(e))
+                logger.warning("Invalid JSON-LD found", error=str(e))
                 continue
         
         return structured_data
     
-    def send_to_kafka(self, content: Dict[str, Any]):
-        """Send article content to Kafka."""
-        if not self.kafka_enabled or not self.kafka_producer:
-            self.logger.debug("Kafka disabled, skipping send", url=content['url'])
-            return
-            
-        try:
-            topic = 'news_content'
-            key = content['site_id']
-            
-            self.kafka_producer.send(topic, value=content, key=key)
-            self.kafka_producer.flush()  # Ensure it's sent
-            
-            self.logger.debug(
-                "Sent to Kafka",
-                topic=topic,
-                url=content['url'],
-                title=content['title'][:50]
-            )
-            
-        except Exception as e:
-            self.logger.error("Failed to send to Kafka", error=str(e))
     
     def get_stats(self) -> Dict[str, Any]:
         """Get monitor statistics."""
@@ -648,4 +451,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main() 
+    main()
