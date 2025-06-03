@@ -1,7 +1,7 @@
 from .embeddings import generate_embedding
 from common.models import NewsInput
 from common.storage import PgVectorStorage
-from processors.base.processor_interface import ProcessorInterface
+from base.processor_interface import ProcessorInterface
 
 class VectorProcessor(ProcessorInterface):
     async def process(self, payload: dict):

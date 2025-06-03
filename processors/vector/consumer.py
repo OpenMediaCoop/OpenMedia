@@ -2,9 +2,9 @@ import asyncio
 import logging
 from common.kafka.conssumer import create_consumer
 from .handler import handle_message
+from common.config import KAFKA_BOOTSTRAP_SERVERS
 
 KAFKA_TOPIC = "enrichment.topic"
-KAFKA_BOOTSTRAP_SERVERS = "localhost:9092"
 GROUP_ID = "vector-processor-group"
 
 logging.basicConfig(level=logging.INFO)

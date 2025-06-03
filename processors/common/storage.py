@@ -1,6 +1,6 @@
 import asyncpg
-from config import PGVECTOR_DSN
-from models import NewsInput, ScrapingMetadataInput
+from .config import PGVECTOR_DSN
+from .models import NewsInput, ScrapingMetadataInput
 from datetime import datetime
 
 class PgVectorStorage:
