@@ -1,3 +1,4 @@
+import asyncio
 from aiokafka import AIOKafkaConsumer
 from config import KAFKA_BOOTSTRAP_SERVERS, KAFKA_TOPIC
 from processor import parse_html

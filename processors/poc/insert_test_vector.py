@@ -10,12 +10,16 @@ import uuid
 
 test_html = """
 <html>
-  <head><title>Corrupción Municipal en Ñuñoa</title></head>
+  <head>
+    <title>Corrupción Municipal en Ñuñoa</title>
+    <meta name="author" content="El Diario de Chile">
+  </head>
   <body>
     <article>
       <h1>Millonario desfalco detectado en la municipalidad</h1>
       <p>Según informes, se desviaron fondos a campañas políticas entre 2020 y 2022.</p>
       <p>La fiscalía abrió una investigación y detuvo a 3 funcionarios.</p>
+      <time datetime="2023-05-01T12:30:00Z">1 de mayo de 2023</time>
       <footer>Publicado en El Diario de Chile</footer>
     </article>
   </body>
@@ -24,10 +28,7 @@ test_html = """
 
 payload = {
     "id": str(uuid.uuid4()),
-    "title": "Corrupción en Ñuñoa",
-    "content": test_html,
-    "published_at": "2023-05-01T12:30:00Z",
-    "fuente": "El Diario de Chile"
+    "html": test_html
 }
 
 print("🟢 Enviando mensaje a topic 'vector.topic'...")
