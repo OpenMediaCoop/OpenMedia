@@ -3,11 +3,13 @@ from .config import PGVECTOR_DSN
 from .models import NewsInput, ScrapingMetadataInput, News, ScrapingMetadata, Base
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
+import logging
 
 class PgVectorStorage:
     def __init__(self):
         self.engine = None
         self.async_session = None
+        self.logger = logging.getLogger(__name__)
 
     async def connect(self):
         if not self.engine:
@@ -26,6 +28,7 @@ class PgVectorStorage:
             await self.engine.dispose()
 
     async def insert_news(self, news: NewsInput) -> int:
+        self.logger.info(f"📝 Creando objeto News para: {news.title[:50]}")
         async with self.async_session() as session:
             embedding_vec = news.embedding
             summary_embedding_vec = news.summary_embedding
@@ -52,6 +55,7 @@ class PgVectorStorage:
             # Add and commit
             session.add(news_db)
             await session.commit()
+            self.logger.info(f"📦 Noticia insertada con ID={news_db.id}")
             await session.refresh(news_db)
             
             return news_db.id
