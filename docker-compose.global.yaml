@@ -22,7 +22,8 @@ services:
       - processor-net
 
   pgvector:
-    image: postgres:15
+    image: ankane/pgvector
+    container_name: pgvector
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres

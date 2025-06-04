@@ -5,11 +5,11 @@ from base.processor_interface import ProcessorInterface
 
 class VectorProcessor(ProcessorInterface):
     async def process(self, payload: dict):
-        embedding = generate_embedding(payload["content"])
+        embedding = generate_embedding(payload.get("text", "[Contenido no disponible]"))
 
         news = NewsInput(
-            title=payload["title"],
-            content=payload["content"],
+            title=payload.get("title", "[Título no disponible]"),
+            content=payload.get("text", "[Contenido no disponible]"),
             embedding=embedding
         )
 
