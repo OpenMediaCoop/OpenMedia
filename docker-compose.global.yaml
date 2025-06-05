@@ -2,24 +2,28 @@ version: '3.9'
 
 services:
   kafka:
-    image: bitnami/kafka:latest
+    image: bitnami/kafka:3.5
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_LISTENERS: PLAINTEXT://:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CFG_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: PLAINTEXT
     networks:
-      - scrapper-net
+      - processor-net
 
   zookeeper:
-    image: bitnami/zookeeper:latest
+    image: bitnami/zookeeper:3.8
     environment:
       ALLOW_ANONYMOUS_LOGIN: 'yes'
     networks:
-      - scrapper-net
+      - processor-net
 
   pgvector:
-    image: postgres:15
+    image: ankane/pgvector
+    container_name: pgvector
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -27,12 +31,12 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
-      - scrapper-net
+      - processor-net
 
 volumes:
   pgdata:
 
 networks:
-  scrapper-net:
-    name: scrapper-net
+  processor-net:
+    name: processor-net
     driver: bridge
