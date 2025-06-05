@@ -1,0 +1,5 @@
+# docker-compose.override.yml
+services:
+  vector-processor:
+    volumes:
+      - ${LOCAL_MODELS_DIR:-./processors/models/paraphrase-multilingual-MiniLM-L12-v2}:/root/.cache/huggingface/transformers/sentence-transformers_paraphrase-multilingual-MiniLM-L12-v2:ro

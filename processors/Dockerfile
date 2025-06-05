@@ -1,5 +1,7 @@
 FROM python:3.11-slim
 
+WORKDIR /app
+
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     LANG=C.UTF-8 \
@@ -20,4 +22,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . /app
 
-WORKDIR /app
+# Copiar el modelo localmente descargado al cache HuggingFace
+RUN mkdir -p /root/.cache/huggingface/transformers
+# COPY models/paraphrase-multilingual-MiniLM-L12-v2 /root/.cache/huggingface/transformers/sentence-transformers_paraphrase-multilingual-MiniLM-L12-v2

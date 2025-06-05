@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class VectorProcessor(ProcessorInterface):
     async def process(self, payload: dict):
-        embedding = generate_embedding(payload.get("text", "[Contenido no disponible]"))
+        embedding = generate_embedding(text=payload.get("text", "[Contenido no disponible]"), model_name="paraphrase-multilingual-MiniLM-L12-v2")
         logger.info(f"🧠 Embedding generado con {len(embedding)} dimensiones")
 
         news = NewsInput(
