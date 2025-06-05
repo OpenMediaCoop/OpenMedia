@@ -1,6 +1,21 @@
 version: '3.9'
 
 services:
+  register-processor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: register-processor
+    environment:
+      ENV: dev
+      KAFKA_TOPIC: processors.topic
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      PGVECTOR_DSN: postgresql+asyncpg://postgres:postgres@pgvector:5432/scrapper
+      POSTGRES_HOST: pgvector
+    command: ["python", "-m", "register.main"]
+    networks:
+      - processor-net
+
   vector-processor:
     build:
       context: .
@@ -8,12 +23,28 @@ services:
     container_name: vector-processor
     environment:
       ENV: dev
-      KAFKA_TOPIC: vector.topic
+      KAFKA_TOPIC: enrichment.topic
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       PGVECTOR_DSN: postgresql+asyncpg://postgres:postgres@pgvector:5432/scrapper
       EMBEDDING_MODEL: sentence-transformers/all-MiniLM-L6-v2
       POSTGRES_HOST: pgvector
     command: ["python", "-m", "vector.main"]
+    networks:
+      - processor-net
+
+  hashtag-processor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hashtag-processor
+    environment:
+      ENV: dev
+      KAFKA_TOPIC: enrichment.topic
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      PGVECTOR_DSN: postgresql+asyncpg://postgres:postgres@pgvector:5432/scrapper
+      KEYWORD_MODEL: ml6team/keyphrase-extraction-t5-small-inspec
+      POSTGRES_HOST: pgvector
+    command: ["python", "-m", "hashtag.main"]
     networks:
       - processor-net
 

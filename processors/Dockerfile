@@ -21,7 +21,3 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . /app
-
-# Copiar el modelo localmente descargado al cache HuggingFace
-RUN mkdir -p /root/.cache/huggingface/transformers
-# COPY models/paraphrase-multilingual-MiniLM-L12-v2 /root/.cache/huggingface/transformers/sentence-transformers_paraphrase-multilingual-MiniLM-L12-v2
